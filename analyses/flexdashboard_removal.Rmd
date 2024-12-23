@@ -1,0 +1,178 @@
+---
+title: "Bias in removal models"
+author: "Olivier Gimenez"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    social: menu
+    source_code: embed
+runtime: shiny
+---
+    
+```{r global, include=FALSE}
+
+# load packages
+library(unmarked)
+library(ubms)
+library(tidyverse)
+
+# define function to carry out simulations:
+removal_par <- function(
+  nb_sites = 10, # number of sites
+  nb_occasions = 3, # number of occasions
+  lambda = 50, # Poisson rate 
+  p = 0.5, # capture probability
+  method = "mle", # method used to fit model, either frequentist/max-likelihood
+                  # with unmarked or Bayes/MCMC with ubms
+  n_sim = 10){ # number of simulations
+
+# preallocate memory for storing estimates
+res <- rep(NA, n_sim)
+
+# simulate data from a static occupancy model n_sim times
+for (j in 1:n_sim){
+  
+  # define state process
+  N <- rpois(nb_sites, lambda) # abundance
+
+  # pre-allocate memory for matrix of removal data
+  y <- matrix(NA, nrow = nb_sites, ncol = nb_occasions) # removal counts
+  
+  # get multinomial cells probabilities
+  pi <- rep(NA, nb_occasions)
+  pi[1] <- p
+  tmp <- rep(1 - p, nb_occasions - 1)
+  for (k in 2:nb_occasions){
+    pi[k] <- prod(tmp[1:(k-1)]) * p
+  }
+  
+  # define observation process
+  for(l in 1:nb_sites) {
+    y[l,] <- rmultinom(1, N[j], c(pi, 1 - sum(pi)))[1:length(pi)]
+  }
+
+  # format data
+  umf <- unmarkedFrameMPois(y = y, type = "removal")
+  
+  # fit removal model w/ constant parameters
+  if (method == "mle"){
+  # if frequentist/MLE:
+  fm <- multinomPois(~1 ~1, umf, starts = c(log(lambda), qlogis(p)))
+  # get estimate of abundance
+  res[j] <- backTransform(fm, type = 'state')@estimate
+  } else {
+  # if Bayes/MCMC
+  fm <- stan_multinomPois(~1 ~1, umf, chains = 1, iter = 1000)
+  # get estimate of abundance
+  res[j] <- mean(exp(unlist(rstan::extract(fm, "beta_state"))))}
+  } # end of simulations j
+
+# return relative bias in %
+bias <- round(mean((res - lambda)/lambda) * 100,1)
+return(bias)
+
+} # end of function
+
+# grids on detection/occupancy probabilities
+capture <- seq(0.1, 0.95, by = 0.1)
+abundance <- seq(5, 200, by = 10)
+```
+
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Compute the relative bias (in %) in the estimator of abundance $N$ in a removal model with constant parameters with package `unmarked` (frequentist/mle) or `ubms` (Bayes/mcmc). Relative bias is $(E(\hat \lambda) - \lambda)/\lambda$. 
+
+
+```{r}
+selectInput("meth", label = "Method used:",
+            choices = c("mle", "mcmc"), selected = "mle")
+
+sliderInput("nsites", label = "Number of sites:",
+            min = 5, max = 100, value = 10, step = 1)
+
+sliderInput("noccasions", label = "Number of occasions:",
+            min = 3, max = 15, value = 5, step = 1)
+
+selectInput("nsim", label = "Number of simulations:",
+            choices = c(10, 100, 250), selected = 10)
+
+selectInput("pal", label = "Color palette:",
+            choices = c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdGy", "RdYlBu", "RdYlGn", "Spectral"), selected = "BrBG")
+```
+
+Column {data-width=600}
+-----------------------------------------------------------------------
+
+### What is the amount of bias in abundance ?
+
+```{r}
+selectedData <- reactive({
+# Initialize a table for storing results:
+sim <- tibble(capture = double(), 
+              abundance = double(),
+              nsites = double(),
+              noccasions = double(),
+              bias = double())
+
+# Compute bias:
+for (i in capture){
+  for (j in abundance){
+    res <- removal_par(nb_sites = as.numeric(input$nsites),
+                       nb_occasions = as.numeric(input$noccasions),
+                       lambda = j,
+                       p = i,
+                       method = input$meth,
+                       n_sim = as.numeric(input$nsim))
+    sim <- sim %>% add_row(capture = i,
+                           abundance = j,
+                           nsites = as.numeric(input$nsites),
+                           noccasions = as.numeric(input$noccasions),
+                           bias = res)
+  }
+}
+sim
+})
+```
+
+```{r}
+# Visualize bias:
+renderPlot({
+limit <- selectedData() %>% 
+  pull(bias) %>%
+  max(abs(.)) * c(-1, 1) # to set midpoint at 0
+selectedData() %>%
+  ggplot() +
+  aes(x = capture,
+      y = abundance, 
+      fill = bias) +
+  geom_tile() +
+  scale_fill_distiller(palette = input$pal, 
+                       type = 'div',
+                       direction = 1,
+                       name = 'relative bias (%)',
+                       limit = limit) + 
+  labs(x = 'capture probability',
+       y = 'abundance') + 
+  theme_bw(base_size = 14) + 
+  theme(legend.position="right",
+        legend.title = element_blank())
+})  
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Simulation details {data-width=400}
+
+```{r}
+renderTable({
+  selectedData() %>%
+    rename('Capture' = capture,
+           'Abundance' = abundance,
+           'Nb sites' = nsites,
+           'Nb occasions' = noccasions,
+           'Bias' = bias)
+})
+```
