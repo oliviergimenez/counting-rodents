@@ -27,7 +27,7 @@ theme_set(theme_light())
 
 # Motivation
 
-Illustrate use of random effect site on abundance, and spatial autocorrelation. 
+Here I illustrate the use of random effect site on abundance, and spatial autocorrelation. I use removal data on muskrats in the Netherlands. 
 
 ```{r}
 library(tidyverse)
@@ -36,15 +36,16 @@ library(cbsodataR)
 library(ubms)
 ```
 
+# Get data
+
+Read in muskrat data:
 ```{r}
-# read in muskrat data
 muskrats <- read_delim("data/occurrence-muskrats.txt")
 head(muskrats)
 ```
 
-
+Extract data for January, February and March:
 ```{r}
-# extract data for January, February and March
 muskrats_3month <-  muskrats %>%
 mutate(
   Start_Date = as.Date(sub("/.*", "", eventDate)),  # extract start date

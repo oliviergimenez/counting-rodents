@@ -110,7 +110,7 @@ Citer chapitre dans bouquin de Kéry and Royle qui va bien (vol I).
 
 ## Case study
 
-To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (*Lutra lutra*) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region (see panel a in Fig. \@ref(fig:mainfig)). Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit. 
+To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (*Lutra lutra*) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region. Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit. 
 
 Pour muskrats: https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014#anchor-versions and https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580. 
 
@@ -128,9 +128,9 @@ I conducted a simulation study to evaluate model performance by examining parame
 
 # Results and discussion
 
-Here, I provide the parameter estimates from the new model accommodating spatial autocorrelation (see also Fig. \@ref(fig:postrace)), unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset [@Couturier2024] that also ignored spatial autocorrelation.
+Here, I provide the parameter estimates from the new model accommodating spatial autocorrelation (see also Fig. \@ref(fig:bias)), unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset [@Couturier2024] that also ignored spatial autocorrelation.
 
-As anticipated, the effect size of human density increased when spatial autocorrelation was ignored. The most likely explanation for this is a bias due to an omitted variable. There is spatial autocorrelation in human density (see panel c in Fig. \@ref(fig:mainfig)), which inflates its effect size; this bias is controlled for when spatial autocorrelation is included in the model. There must be spatial variation in occupancy probabilities attributable to another variable that needs to be accounted for.
+As anticipated, the effect size of human density increased when spatial autocorrelation was ignored. The most likely explanation for this is a bias due to an omitted variable. There is spatial autocorrelation in human density, which inflates its effect size; this bias is controlled for when spatial autocorrelation is included in the model. There must be spatial variation in occupancy probabilities attributable to another variable that needs to be accounted for.
 
 The results of the simulation study underscored the importance of accounting for spatial autocorrelation. Ignoring spatial autocorrelation led to a relative bias of -26% in the slope of the covariate, compared to just 0.7% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330%), this outcome was expected. In spatial models, there is typically a strong positive relationship between the range parameter and the partial sill [@zhang2004; @VerHoef2024], which showed a bias of 12%. Importantly, the ratio of the range parameter to the partial sill can be reliably estimated [@zhang2004], as evidenced by its negligible bias (0.9%). Overall, the root mean square prediction error (RMSPE) was lower for the model with spatial correlation (RMSPE = 0.18) compared to the model without it (RMSPE = 0.23).
 
@@ -187,18 +187,6 @@ write.bibtex(file = "knitcitations.bib")
 
 \newpage
 
-\blandscape
-
-```{r mainfig, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Information on the otter data is provided. In panel a), the study area is given in a grey rectable on a map of France. In panel b) the number of detections is given on a map of the study area; it is the sum of detections across the three repeated visits, which can range from 0 (if the species was not detected at any visit) to 3 (if the species was detected at all three visits). In panel c) the human population density is represented on a map of the study area, in number of inhabitants per km2; the missing intervals (90,120] and (120,150] are due to the absence of sites with human population densities within these ranges."}
-include_graphics("mainfigure.png")
-```
-
-\elandscape
-
-\clearpage
-
-\newpage
-
-```{r postrace, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Posterior density plots (left) and trace plots (right) are shown for the regression parameters ($\\beta_0$: intercept, $\\beta_1$: slope of the human population density effect, $\\beta_2$: slope of the proportion of cultivated areas effect), spatial parameters ($\\sigma$: partial sill, $\\theta$: range parameter) and the detection probability ($p$). Each of the two chains is represented in a distinct shade of blue."}
-include_graphics("posterior-trace.png")
+```{r bias, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Relative bias."}
+include_graphics("heatmap_bias.png")
 ```

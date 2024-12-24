@@ -27,19 +27,22 @@ theme_set(theme_light())
 
 # Motivation
 
-Show the hierarchical structure, and covariates on abundance and capture. Also scratches surface of lack of fit w/ overdispersion and negative binomial instead of poisson. 
+Here I illustrate the hierarchical structure of the multinomial N-mixture model, and demonstrate how to use covariates on the abundance and capture probabilities. I also illustrate how to deal with overdispersion by fitting a model with a negative binomial (instead of a Poisson) distribution for abundance. I use removal data on coypus in France. 
 
+First things first, load the packages we will need:
 ```{r}
 library(sf)
 library(tidyverse)
 library(janitor)
 library(lubridate)
-library(unmarked)
+library(nimble)
+library(ubms)
+library(MCMCvis)
 ```
 
 # Get data
 
-Fonds de carte
+Get some background maps with all departments (counties) of the Occitanie region:
 ```{r}
 departements <- st_read("shp/departements-d-occitanie.shp")
 mask <- departements$nom_officie.2 == "HERAULT" 
@@ -48,7 +51,7 @@ communes <- st_read("shp/georef-france-commune-millesime.shp")
 communes_herault <- communes %>% st_intersection(herault)
 ```
 
-
+Visualize:
 ```{r}
 ggplot() +
   geom_sf(data = herault, color = "black", lwd = 1) +
@@ -56,7 +59,7 @@ ggplot() +
   theme_void()
 ```
 
-
+Select the cities where trapping occurred:
 ```{r}
 noms_communes_piegeage <- c("BAILLARGUES",
                             "CANDILLARGUES",
@@ -78,7 +81,7 @@ noms_communes_piegeage <- c("BAILLARGUES",
 communes_piegeage <- communes_herault[communes_herault$com_name_up %in% noms_communes_piegeage,]
 ```
 
-
+Visualize:
 ```{r}
 ggplot() +
   geom_sf(data = herault, color = "black", lwd = 1) +
@@ -87,7 +90,7 @@ ggplot() +
   theme_void()
 ```
 
-Removal data
+Get coypus removal data:
 ```{r}
 raw_dat <- readRDS("data/coypus.rds")
 ```

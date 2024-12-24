@@ -1,4 +1,4 @@
-# get rainfall through kriging
+# get temperature through kriging
 
 library(tidyverse)
 library(tidyterra)
@@ -10,7 +10,8 @@ Dir.Base <- getwd() # identifying the current directory
 Dir.Data <- file.path(Dir.Base, "data") # folder path for data
 
 # départements de la région
-dpts_occitanie <- st_read("shp/departements-d-occitanie.shp")
+dpts_occitanie <- st_read("data/departements-d-occitanie.shp") %>%
+  st_transform(crs = st_crs(dat_points))
 
 # contours de la région
 loc_site <- dpts_occitanie %>% 
@@ -28,47 +29,47 @@ occitanie_raster <- st_bbox(c(xmin = -0.35,
   terra::vect() %>%
   terra::rast()
 
-poccitanie <- CDownloadS(
-  Variable = "total_precipitation",
+toccitanie <- CDownloadS(
+  Variable = "2m_temperature",
   DataSet = "reanalysis-era5-land-monthly-means",
   Type = "monthly_averaged_reanalysis",
-  DateStart = "2021-01-12 00:00",
-  DateStop = "2022-03-31 23:00",
+  DateStart = "2015-01-12 00:00",
+  DateStop = "2016-03-31 23:00",
   TZone = "Europe/Paris",
   TResolution = "month",
   TStep = 1,
   Extent = occitanie_raster, # our data.frame with Lat and Lon columns
   Dir = Dir.Data,
-  FileName = "Poccitanie",
+  FileName = "Toccitanie",
   API_User = "olivier.gimenez@cefe.cnrs.fr",
   API_Key = "ccb31c25-7603-4cd7-8e88-97c8eb6e9cbd"
 )
 
-terra::writeRaster(x = poccitanie,
-                  filename = "shp/pluvio.tif",
+terra::writeRaster(x = toccitanie,
+                  filename = "shp/temp.tif",
                   overwrite = TRUE)
 
-poccitanie <- terra::rast("shp/pluvio.tif")
+toccitanie <- terra::rast("shp/temp.tif")
 
-Plot.SpatRast(poccitanie$Poccitanie_11) + 
+Plot.SpatRast(toccitanie$Toccitanie_11) + 
   geom_sf(data = dpts_occitanie %>% 
             st_union() %>%
             st_transform(crs = 4326), 
              fill = NA)
 
-Plot.SpatRast(poccitanie$Poccitanie_12) + 
+Plot.SpatRast(toccitanie$Toccitanie_12) + 
   geom_sf(data = dpts_occitanie %>% 
             st_union() %>%
             st_transform(crs = 4326), 
           fill = NA)
 
-Plot.SpatRast(poccitanie$Poccitanie_13) + 
+Plot.SpatRast(toccitanie$Toccitanie_13) + 
   geom_sf(data = dpts_occitanie %>% 
             st_union() %>%
             st_transform(crs = 4326), 
           fill = NA)
 
-Plot.SpatRast(poccitanie$Poccitanie_14) + 
+Plot.SpatRast(toccitanie$Toccitanie_14) + 
   geom_sf(data = dpts_occitanie %>% 
             st_union() %>%
             st_transform(crs = 4326), 
@@ -99,12 +100,20 @@ noms_communes_piegeage <- c("BAILLARGUES",
                             "SAINT-VINCENT-DE-BARBEYRARGUES")
 communes_piegeage <- communes_herault[communes_herault$com_name_up %in% noms_communes_piegeage,]
 
-pluvio_communes <- terra::extract(poccitanie, communes_piegeage) %>%
+temp_communes <- terra::extract(toccitanie, communes_piegeage) %>%
   group_by(ID) %>%
-  summarise(raindec2021 = mean(Poccitanie_11, na.rm = T),
-            rainjan2022 = mean(Poccitanie_12, na.rm = T),
-            rainfeb2022 = mean(Poccitanie_13, na.rm = T),
-            rainmar2022 = mean(Poccitanie_14, na.rm = T),
+  summarise(tdec2021 = mean(Toccitanie_11, na.rm = T),
+            tjan2022 = mean(Toccitanie_12, na.rm = T),
+            tfeb2022 = mean(Toccitanie_13, na.rm = T),
+            tmar2022 = mean(Toccitanie_14, na.rm = T),
   )
 
-saveRDS(pluvio_communes, "data/rainfall.rds")
+
+
+temp_communes <- temp_communes %>% 
+  mutate(tdec2021 = weathermetrics::kelvin.to.celsius(tdec2021),
+         tjan2022 = weathermetrics::kelvin.to.celsius(tjan2022),
+         tfeb2022 = weathermetrics::kelvin.to.celsius(tfeb2022),
+         tmar2022 = weathermetrics::kelvin.to.celsius(tmar2022))
+
+saveRDS(temp_communes, "data/temperature.rds")

@@ -1,0 +1,198 @@
+---
+title: "Bias in removal models"
+author: "Olivier Gimenez"
+date: "Dec 2024"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+    number_sections: true
+    theme: united
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      cache = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      dpi = 600, 
+                      fig.height=6, 
+                      fig.width = 1.777777*6)
+library(tidyverse)
+theme_set(theme_light())
+```
+
+# Objective
+
+Compute the relative bias (in %) in the estimator of expected abundance $E(N) = \lambda$ in a removal model with constant parameters with package `unmarked` (frequentist/mle). Relative bias is $(E(\hat \lambda) - \lambda)/\lambda$.
+
+Load packages:
+
+```{r}
+library(unmarked)
+library(tidyverse)
+```
+
+# Function
+
+Create function to carry out simulations:
+
+```{r}
+removal_par <- function(
+    
+  nb_sites = 10, # number of sites
+  nb_occasions = 3, # number of occasions
+  lambda = 50, # Poisson rate 
+  p = 0.5, # capture probability
+  n_sim = 10){ # number of simulations
+  
+  # preallocate memory for storing estimates
+  res <- rep(NA, n_sim)
+  
+  # simulate data from a static occupancy model n_sim times
+  for (j in 1:n_sim){
+    
+    # define state process
+    N <- rpois(nb_sites, lambda) # abundance
+    
+    # pre-allocate memory for matrix of removal data
+    y <- matrix(NA, nrow = nb_sites, ncol = nb_occasions) # removal counts
+    
+    # get multinomial cells probabilities
+    pi <- rep(NA, nb_occasions)
+    pi[1] <- p
+    tmp <- rep(1 - p, nb_occasions - 1)
+    for (k in 2:nb_occasions){
+      pi[k] <- prod(tmp[1:(k-1)]) * p
+    }
+    
+    # define observation process
+    for(l in 1:nb_sites) {
+      y[l,] <- rmultinom(1, N[l], c(pi, 1 - sum(pi)))[1:length(pi)]
+    }
+    
+    # format data
+    umf <- unmarkedFrameMPois(y = y, type = "removal")
+
+    # fit removal model w/ constant parameters
+    fm <- multinomPois(~1 ~1, umf, engine = "C")
+
+    # get estimate of abundance
+    tmp <- backTransform(fm, type = 'state')@estimate
+    if (tmp > lambda * 2) next # probably a convergence issue
+    res[j] <- tmp
+    
+    # return relative bias in %
+    bias <- round(mean((res - lambda)/lambda, na.rm = TRUE) * 100,1)
+    return(bias)
+    
+  } # end of simulations
+} # end of function
+```
+
+# Bias calculation
+
+Initialize a table for storing results:
+
+```{r}
+sim <- tibble(capture = double(), 
+              abundance = double(),
+              nsites = double(),
+              noccasions = double(),
+              bias = double())
+```
+
+Create a grids of values for the capture probability, abundance, the number of sites and the number of occasions:
+
+```{r}
+capture <- seq(0.3, 0.9, length = 20)
+abundance <- round(seq(10, 100, length = 20))
+nb_sites <- c(1, 5, 10, 50)
+nb_occasions <- c(3, 5, 10)
+```
+
+Set the number of simulations to 100:
+
+```{r}
+n_sim <- 500
+```
+
+Compute bias:
+
+```{r}
+for (k in nb_sites){
+  for (l in nb_occasions){
+    for (i in capture){
+      for (j in abundance){
+        res <- removal_par(nb_sites = k,
+                           nb_occasions = l,
+                           lambda = j,
+                           p = i,
+                           n_sim = n_sim)
+        sim <- sim %>% add_row(capture = i,
+                               abundance = j,
+                               nsites = k,
+                               noccasions = l,
+                               bias = res)
+      }
+    }
+    print(paste0("Relative bias in abundance for ",k," sites and ",l," occasions: done"))
+  }
+}
+```
+
+```{r}
+sim %>% View()
+```
+
+Save results:
+
+```{r}
+saveRDS(object = sim, file = "sims/sims.rds")
+```
+
+# Visualization
+
+Plot a heatmap of relative bias as a function of capture probability and abundance, for given values of the number of sites and occasions, and save the plot:
+
+```{r}
+# Create a custom labeller function
+facet_labels <- function(variable) {
+  paste0("Sites: ", variable$nsites, ", Occasions: ", variable$noccasions)
+}
+
+ggplot(sim, aes(x = capture, y = abundance, fill = bias)) +
+  geom_tile() +  # Creates the heatmap
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  facet_wrap(
+    vars(nsites, noccasions),
+    ncol = 3,
+    labeller = labeller(.multi_line = FALSE, 
+      nsites = function(x) paste0("Sites: ", x),
+      noccasions = function(x) paste0("Occasions: ", x)
+    )
+  ) +  
+  labs(
+#    title = "Relative bias in abundance",
+    x = "Capture",
+    y = "Abundance",
+    fill = "Bias (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 11),  
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12), 
+    axis.text.y = element_text(size = 12),
+    axis.title.x =  element_text(size = 14),
+    axis.title.y =  element_text(size = 14)
+  )
+```
+
+```{r}
+ggsave(filename = "sims/heatmap_bias.png")
+```
+
+
