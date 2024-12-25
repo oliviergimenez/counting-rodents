@@ -108,31 +108,37 @@ Both parameters, $N$ and $p$, can be modeled as functions of explanatory spatial
 
 Citer chapitre dans bouquin de Kéry and Royle qui va bien (vol I). 
 
-## Case study
-
-To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (*Lutra lutra*) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region. Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit. 
-
-Pour muskrats: https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014#anchor-versions and https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580. 
-
-Tableau avec les données. Et les covariables. 
-
 ## Implementation
 
 For all analyses, I used the statistical language `R` `r citep(citation())`. I used the `tidyverse` `r citep(citation("tidyverse"))` suite of packages for data manipulation and visualization and `sf` `r citep(citation("sf")[[1]])` for dealing with spatial data. I fitted models within the frequentist framework... unmarked  `r citep(citation("unmarked")[[1]])`. Bayesian framework using the `ubms` `r citep(citation("ubms"))` package. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and uniform distributions for the partial sill, range parameter and detection probability. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (< 1.1), effective sample size (> 100), and visual inspection of the trace plots. 
 
-## Simulation study
+# Simulations
 
-Voir un peu comment se comporte le modèle en fonction du nombre de sites et d'occasions. Prendre la prob de capture du cas d'étude coypu. 
+Voir un peu comment se comporte le modèle en fonction du nombre de sites et d'occasions. 
 
 I conducted a simulation study to evaluate model performance by examining parameter bias and prediction error. I simulated a stream network over $S = 100$ sites using an exponential tail-down structure (inspired by the case study, see previous section) with partial sill $\sigma^2 = 2$ and range parameter $\theta = 10$. I considered a single covariate, normally distributed with mean 0 and standard deviation 1, with a linear effect (on the logit scale) on the occupancy probability with intercept $\beta_0 = 0.5$ and slope $\beta_1 = 1$. I simulated the observation process with a detection probability $p = 0.6$ across 5 repeated visits per site. I fitted both models, with and without spatial autocorrelation, to the simulated data, and I repeated this procedure 100 times. Eventually, I calculated the relative bias for each parameter and the root mean square prediction error (RMSPE) for each model. Unmarked only to speed up process. 
 
+# Case studies
+
+Temperature. Citer krigR. Month effect. First case study for hierarchical and covariates. Second case study for random effect. 
+
+## Coypus in France
+
+Tableau avec les données. Et les covariables. 
+
+To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (*Lutra lutra*) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region. Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit. 
+
+## Muskrats in the Netherlands
+
+Pour muskrats: https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014#anchor-versions and https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580. 
+
 # Results and discussion
 
-Here, I provide the parameter estimates from the new model accommodating spatial autocorrelation (see also Fig. \@ref(fig:bias)), unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset [@Couturier2024] that also ignored spatial autocorrelation.
+The results of the simulation study underscored the importance of accounting for spatial autocorrelation - see Fig. \@ref(fig:bias). Ignoring spatial autocorrelation led to a relative bias of -26% in the slope of the covariate, compared to just 0.7% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330%), this outcome was expected. In spatial models, there is typically a strong positive relationship between the range parameter and the partial sill [@zhang2004; @VerHoef2024], which showed a bias of 12%. Importantly, the ratio of the range parameter to the partial sill can be reliably estimated [@zhang2004], as evidenced by its negligible bias (0.9%). Overall, the root mean square prediction error (RMSPE) was lower for the model with spatial correlation (RMSPE = 0.18) compared to the model without it (RMSPE = 0.23).
 
-As anticipated, the effect size of human density increased when spatial autocorrelation was ignored. The most likely explanation for this is a bias due to an omitted variable. There is spatial autocorrelation in human density, which inflates its effect size; this bias is controlled for when spatial autocorrelation is included in the model. There must be spatial variation in occupancy probabilities attributable to another variable that needs to be accounted for.
+Coypus case study. I provide the parameter estimates from the new model accommodating spatial autocorrelation , unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset [@Couturier2024] that also ignored spatial autocorrelation.
 
-The results of the simulation study underscored the importance of accounting for spatial autocorrelation. Ignoring spatial autocorrelation led to a relative bias of -26% in the slope of the covariate, compared to just 0.7% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330%), this outcome was expected. In spatial models, there is typically a strong positive relationship between the range parameter and the partial sill [@zhang2004; @VerHoef2024], which showed a bias of 12%. Importantly, the ratio of the range parameter to the partial sill can be reliably estimated [@zhang2004], as evidenced by its negligible bias (0.9%). Overall, the root mean square prediction error (RMSPE) was lower for the model with spatial correlation (RMSPE = 0.18) compared to the model without it (RMSPE = 0.23).
+Muskrats case study. - see Fig. \@ref(fig:muskrats)
 
 Two short-term perspectives arise from this work. From a methodological perspective, the new approach could be extended to multi-season occupancy models, enabling the modeling of colonization probability as a function of distance to habitat features that may impede species movement [e.g., @Kervellec2023]. This would facilitate the quantification of landscape connectivity in freshwater ecosystems. Such development requires moving to spatio-temporal models for stream and river data, which have recently become avaible [@Santos2022]. From an ecological perspective, the new approach presents significant potential for the analysis of environmental DNA (eDNA). The eDNA methodology offers substantial promise for the non-invasive monitoring of biodiversity in freshwater ecosystems [@Carraro2020]. While spatial stream network models have been employed to analyze eDNA data [@Winkowski2024], these models have overlooked the issue of imperfect detection. Previous studies have recognized occupancy models as effective tools for eDNA data analysis [@Burian2021], with some considering spatial autocorrelation [@Chen2019], however they have yet to integrate spatial stream networks. The new approach addresses this gap by incorporating both imperfect detection and spatial stream networks.
 
@@ -162,13 +168,9 @@ Pour NB, pas possible avec ubms. OK avec NIMBLE et unmarked.
 
 I would like to warmly thank X and Y for data. 
 
-# Ethics and Integrity statements
-
-Not applicable. 
-
 ## Data availability statement
 
-Data and code are available at \href{https://github.com/oliviergimenez/counting-coypus}{https://github.com/oliviergimenez/counting-coypus}.
+Data and code are available at \href{https://github.com/oliviergimenez/counting-rodents}{https://github.com/oliviergimenez/counting-rodents}.
 
 ## Funding statement
 
@@ -195,4 +197,12 @@ write.bibtex(file = "knitcitations.bib")
 
 ```{r bias, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Relative bias."}
 include_graphics("heatmap_bias.png")
+```
+
+\clearpage
+
+\newpage
+
+```{r muskrats, out.width="95%", fig.align='center', fig.pos='b', fig.cap="Muskrats."}
+include_graphics("muskrats.png")
 ```

@@ -146,7 +146,7 @@
 
 \title{Estimating coypu (Myocastor coypus) abundance using removal data}
 \author{Olivier Gimenez\textsuperscript{1}*}
-\date{2024-12-24}
+\date{2024-12-25}
 
 \begin{document}
 \maketitle
@@ -206,31 +206,37 @@ Both parameters, \(N\) and \(p\), can be modeled as functions of explanatory spa
 
 Citer chapitre dans bouquin de Kéry and Royle qui va bien (vol I).
 
-\subsection{Case study}\label{case-study}
-
-To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (\emph{Lutra lutra}) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region. Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit.
-
-Pour muskrats: \url{https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014\#anchor-versions} and \url{https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580}.
-
-Tableau avec les données. Et les covariables.
-
 \subsection{Implementation}\label{implementation}
 
 For all analyses, I used the statistical language \texttt{R} (\citeproc{ref-R_Core_Team_2024}{R Core Team 2024}). I used the \texttt{tidyverse} (\citeproc{ref-Wickham_2019}{Wickham et al. 2019}) suite of packages for data manipulation and visualization and \texttt{sf} (\citeproc{ref-Pebesma_2023}{Pebesma and Bivand 2023}) for dealing with spatial data. I fitted models within the frequentist framework\ldots{} unmarked (\citeproc{ref-Kellner_2023}{Kellner et al. 2023}). Bayesian framework using the \texttt{ubms} (\citeproc{ref-Kellner_2021}{Kellner et al. 2021}) package. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and uniform distributions for the partial sill, range parameter and detection probability. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (\textless{} 1.1), effective sample size (\textgreater{} 100), and visual inspection of the trace plots.
 
-\subsection{Simulation study}\label{simulation-study}
+\section{Simulations}\label{simulations}
 
-Voir un peu comment se comporte le modèle en fonction du nombre de sites et d'occasions. Prendre la prob de capture du cas d'étude coypu.
+Voir un peu comment se comporte le modèle en fonction du nombre de sites et d'occasions.
 
 I conducted a simulation study to evaluate model performance by examining parameter bias and prediction error. I simulated a stream network over \(S = 100\) sites using an exponential tail-down structure (inspired by the case study, see previous section) with partial sill \(\sigma^2 = 2\) and range parameter \(\theta = 10\). I considered a single covariate, normally distributed with mean 0 and standard deviation 1, with a linear effect (on the logit scale) on the occupancy probability with intercept \(\beta_0 = 0.5\) and slope \(\beta_1 = 1\). I simulated the observation process with a detection probability \(p = 0.6\) across 5 repeated visits per site. I fitted both models, with and without spatial autocorrelation, to the simulated data, and I repeated this procedure 100 times. Eventually, I calculated the relative bias for each parameter and the root mean square prediction error (RMSPE) for each model. Unmarked only to speed up process.
 
+\section{Case studies}\label{case-studies}
+
+Temperature. Citer krigR. Month effect. First case study for hierarchical and covariates. Second case study for random effect.
+
+\subsection{Coypus in France}\label{coypus-in-france}
+
+Tableau avec les données. Et les covariables.
+
+To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (\emph{Lutra lutra}) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region. Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit.
+
+\subsection{Muskrats in the Netherlands}\label{muskrats-in-the-netherlands}
+
+Pour muskrats: \url{https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014\#anchor-versions} and \url{https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580}.
+
 \section{Results and discussion}\label{results-and-discussion}
 
-Here, I provide the parameter estimates from the new model accommodating spatial autocorrelation (see also Fig. \ref{fig:bias}), unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset (\citeproc{ref-Couturier2024}{Couturier et al. 2023}) that also ignored spatial autocorrelation.
+The results of the simulation study underscored the importance of accounting for spatial autocorrelation - see Fig. \ref{fig:bias}. Ignoring spatial autocorrelation led to a relative bias of -26\% in the slope of the covariate, compared to just 0.7\% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330\%), this outcome was expected. In spatial models, there is typically a strong positive relationship between the range parameter and the partial sill (\citeproc{ref-zhang2004}{Zhang 2004}, \citeproc{ref-VerHoef2024}{Ver Hoef et al. 2024}), which showed a bias of 12\%. Importantly, the ratio of the range parameter to the partial sill can be reliably estimated (\citeproc{ref-zhang2004}{Zhang 2004}), as evidenced by its negligible bias (0.9\%). Overall, the root mean square prediction error (RMSPE) was lower for the model with spatial correlation (RMSPE = 0.18) compared to the model without it (RMSPE = 0.23).
 
-As anticipated, the effect size of human density increased when spatial autocorrelation was ignored. The most likely explanation for this is a bias due to an omitted variable. There is spatial autocorrelation in human density, which inflates its effect size; this bias is controlled for when spatial autocorrelation is included in the model. There must be spatial variation in occupancy probabilities attributable to another variable that needs to be accounted for.
+Coypus case study. I provide the parameter estimates from the new model accommodating spatial autocorrelation , unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset (\citeproc{ref-Couturier2024}{Couturier et al. 2023}) that also ignored spatial autocorrelation.
 
-The results of the simulation study underscored the importance of accounting for spatial autocorrelation. Ignoring spatial autocorrelation led to a relative bias of -26\% in the slope of the covariate, compared to just 0.7\% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330\%), this outcome was expected. In spatial models, there is typically a strong positive relationship between the range parameter and the partial sill (\citeproc{ref-zhang2004}{Zhang 2004}, \citeproc{ref-VerHoef2024}{Ver Hoef et al. 2024}), which showed a bias of 12\%. Importantly, the ratio of the range parameter to the partial sill can be reliably estimated (\citeproc{ref-zhang2004}{Zhang 2004}), as evidenced by its negligible bias (0.9\%). Overall, the root mean square prediction error (RMSPE) was lower for the model with spatial correlation (RMSPE = 0.18) compared to the model without it (RMSPE = 0.23).
+Muskrats case study. - see Fig. \ref{fig:muskrats}
 
 Two short-term perspectives arise from this work. From a methodological perspective, the new approach could be extended to multi-season occupancy models, enabling the modeling of colonization probability as a function of distance to habitat features that may impede species movement (e.g., \citeproc{ref-Kervellec2023}{Kervellec et al. 2024}). This would facilitate the quantification of landscape connectivity in freshwater ecosystems. Such development requires moving to spatio-temporal models for stream and river data, which have recently become avaible (\citeproc{ref-Santos2022}{Santos-Fernandez et al. 2022}). From an ecological perspective, the new approach presents significant potential for the analysis of environmental DNA (eDNA). The eDNA methodology offers substantial promise for the non-invasive monitoring of biodiversity in freshwater ecosystems (\citeproc{ref-Carraro2020}{Carraro et al. 2020}). While spatial stream network models have been employed to analyze eDNA data (\citeproc{ref-Winkowski2024}{Winkowski et al. 2024}), these models have overlooked the issue of imperfect detection. Previous studies have recognized occupancy models as effective tools for eDNA data analysis (\citeproc{ref-Burian2021}{Burian et al. 2021}), with some considering spatial autocorrelation (\citeproc{ref-Chen2019}{Chen and Ficetola 2019}), however they have yet to integrate spatial stream networks. The new approach addresses this gap by incorporating both imperfect detection and spatial stream networks.
 
@@ -250,17 +256,19 @@ Les hypothèses du modèle. Ici ou en discussion. Population fermée: pas de nai
 
 Lack of fit, overdispersion and negative binomial.
 
+Si random effect site pas pertinent, on peut faire du spatial autocorrelation avec RSR. Easy avec ubms, possible aussi avec NIMBLE (\url{https://wildlife.onlinelibrary.wiley.com/doi/10.1002/jwmg.22296}). Pas possible avec unmarked.
+
+Pour l'ouvert, possible avec unmarked, pas ubms. OK avec NIMBLE.
+
+Pour NB, pas possible avec ubms. OK avec NIMBLE et unmarked.
+
 \section{Acknowledgments}\label{acknowledgments}
 
 I would like to warmly thank X and Y for data.
 
-\section{Ethics and Integrity statements}\label{ethics-and-integrity-statements}
-
-Not applicable.
-
 \subsection{Data availability statement}\label{data-availability-statement}
 
-Data and code are available at \href{https://github.com/oliviergimenez/counting-coypus}{https://github.com/oliviergimenez/counting-coypus}.
+Data and code are available at \href{https://github.com/oliviergimenez/counting-rodents}{https://github.com/oliviergimenez/counting-rodents}.
 
 \subsection{Funding statement}\label{funding-statement}
 
@@ -397,6 +405,19 @@ Zippin, C. 1958. The removal method of population estimation. The Journal of Wil
 }
 
 \caption{Relative bias.}\label{fig:bias}
+\end{figure}
+
+\clearpage
+
+\newpage
+
+\begin{figure}[b]
+
+{\centering \includegraphics[width=0.95\linewidth]{muskrats} 
+
+}
+
+\caption{Muskrats.}\label{fig:muskrats}
 \end{figure}
 
 \end{document}
