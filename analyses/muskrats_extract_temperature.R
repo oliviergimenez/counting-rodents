@@ -5,115 +5,93 @@ library(tidyterra)
 library(lubridate)
 library(sf)
 library(KrigR) # https://www.erikkusch.com/courses/krigr/
+library(cbsodataR)
+
 
 Dir.Base <- getwd() # identifying the current directory
 Dir.Data <- file.path(Dir.Base, "data") # folder path for data
 
-# départements de la région
-dpts_occitanie <- st_read("data/departements-d-occitanie.shp") %>%
-  st_transform(crs = st_crs(dat_points))
+# map of the netherlands
+cbs_maps <- cbs_get_maps()
+netherlands <- cbs_get_sf("gemeente", 2023)
 
-# contours de la région
-loc_site <- dpts_occitanie %>% 
+netherlands <- netherlands %>% 
   st_union() %>%
   st_transform(crs = 4326)
 
-st_bbox(loc_site)
+plot(netherlands)
 
-occitanie_raster <- st_bbox(c(xmin = -0.35, 
-                              xmax = 5, 
-                              ymax = 45.1, 
-                              ymin = 42), 
+st_bbox(netherlands)
+
+netherlands_raster <- st_bbox(c(xmin = 3.3, 
+                              xmax = 7.3, 
+                              ymax = 54, 
+                              ymin = 50), 
                             crs = st_crs(4326)) %>%
   st_as_sfc() %>%
   terra::vect() %>%
   terra::rast()
 
-toccitanie <- CDownloadS(
+tnetherlands <- CDownloadS(
   Variable = "2m_temperature",
   DataSet = "reanalysis-era5-land-monthly-means",
   Type = "monthly_averaged_reanalysis",
-  DateStart = "2015-01-12 00:00",
-  DateStop = "2016-03-31 23:00",
-  TZone = "Europe/Paris",
+  # time-window, default set to range of dataset-type
+  DateStart = "2013-12-31 00:00",
+  DateStop = "2014-03-31 23:00",
+  TZone = "CET",
+  # temporal aggregation
   TResolution = "month",
   TStep = 1,
-  Extent = occitanie_raster, # our data.frame with Lat and Lon columns
-  Dir = Dir.Data,
-  FileName = "Toccitanie",
+  # file storing
+  Extent = netherlands_raster,
+  FileName = "Tnetherlands",
+  # API credentials
   API_User = "olivier.gimenez@cefe.cnrs.fr",
   API_Key = "ccb31c25-7603-4cd7-8e88-97c8eb6e9cbd"
 )
 
-terra::writeRaster(x = toccitanie,
-                  filename = "shp/temp.tif",
+Plot.SpatRast(tnetherlands$Tnetherlands_1)
+Plot.SpatRast(tnetherlands$Tnetherlands_2)
+Plot.SpatRast(tnetherlands$Tnetherlands_3)
+
+terra::writeRaster(x = tnetherlands,
+                  filename = "analyses/shp/tempn.tif",
                   overwrite = TRUE)
 
-toccitanie <- terra::rast("shp/temp.tif")
+tnetherlands <- terra::rast("analyses/shp/tempn.tif")
 
-Plot.SpatRast(toccitanie$Toccitanie_11) + 
-  geom_sf(data = dpts_occitanie %>% 
-            st_union() %>%
-            st_transform(crs = 4326), 
-             fill = NA)
-
-Plot.SpatRast(toccitanie$Toccitanie_12) + 
-  geom_sf(data = dpts_occitanie %>% 
-            st_union() %>%
-            st_transform(crs = 4326), 
+Plot.SpatRast(tnetherlands$Tnetherlands_1) + 
+  geom_sf(data = netherlands, 
           fill = NA)
 
-Plot.SpatRast(toccitanie$Toccitanie_13) + 
-  geom_sf(data = dpts_occitanie %>% 
-            st_union() %>%
-            st_transform(crs = 4326), 
+Plot.SpatRast(tnetherlands$Tnetherlands_2) + 
+  geom_sf(data = netherlands, 
           fill = NA)
 
-Plot.SpatRast(toccitanie$Toccitanie_14) + 
-  geom_sf(data = dpts_occitanie %>% 
-            st_union() %>%
-            st_transform(crs = 4326), 
+Plot.SpatRast(tnetherlands$Tnetherlands_3) + 
+  geom_sf(data = netherlands, 
           fill = NA)
 
-# extract rainfall per commune
-departements <- st_read("shp/departements-d-occitanie.shp")
-mask <- departements$nom_officie.2 == "HERAULT" 
-herault <- departements[mask, ]
-communes <- st_read("shp/georef-france-commune-millesime.shp")
-communes_herault <- communes %>% st_intersection(herault)
-noms_communes_piegeage <- c("BAILLARGUES",
-                            "CANDILLARGUES",
-                            "LA GRANDE-MOTTE",
-                            "LANSARGUES",
-                            "MARSILLARGUES",
-                            "MAUGUIO",
-                            "SAINT-NAZAIRE-DE-PÉZAN",
-                            "TEYRAN",
-                            "ENTRE-VIGNES", #"SAINT-CHRISTOL",
-                            "SAINT-AUNÈS",
-                            "VALERGUES",
-                            "SAINT-JUST",
-                            "SAINT-GENIÈS-DES-MOURGUES",
-                            "PÉROLS",
-                            "LUNEL-VIEL",
-                            "LUNEL",
-                            "SAINT-VINCENT-DE-BARBEYRARGUES")
-communes_piegeage <- communes_herault[communes_herault$com_name_up %in% noms_communes_piegeage,]
+# extract temperature per cities
+cbs_maps <- cbs_get_maps()
+netherlands <- cbs_get_sf("gemeente", 2023)
+netherlands <- netherlands %>%
+  st_transform(crs = 4326)
 
-temp_communes <- terra::extract(toccitanie, communes_piegeage) %>%
-  group_by(ID) %>%
-  summarise(tdec2021 = mean(Toccitanie_11, na.rm = T),
-            tjan2022 = mean(Toccitanie_12, na.rm = T),
-            tfeb2022 = mean(Toccitanie_13, na.rm = T),
-            tmar2022 = mean(Toccitanie_14, na.rm = T),
+temp_cities <- terra::extract(tnetherlands, netherlands) 
+temp_cities <- temp_cities %>%
+  left_join(data.frame(ID = 1:nrow(netherlands), statcode = netherlands[["statcode"]]), by = "ID")
+temp_cities <- temp_cities %>%
+  group_by(statcode) %>%
+  summarise(tjan2014 = mean(Tnetherlands_1, na.rm = T),
+            tfeb2014 = mean(Tnetherlands_2, na.rm = T),
+            tmar2014 = mean(Tnetherlands_3, na.rm = T),
   )
 
+temp_cities <- temp_cities %>% 
+  mutate(tjan2014 = weathermetrics::kelvin.to.celsius(tjan2014),
+         tfeb2014 = weathermetrics::kelvin.to.celsius(tfeb2014),
+         tmar2014 = weathermetrics::kelvin.to.celsius(tmar2014))
 
-
-temp_communes <- temp_communes %>% 
-  mutate(tdec2021 = weathermetrics::kelvin.to.celsius(tdec2021),
-         tjan2022 = weathermetrics::kelvin.to.celsius(tjan2022),
-         tfeb2022 = weathermetrics::kelvin.to.celsius(tfeb2022),
-         tmar2022 = weathermetrics::kelvin.to.celsius(tmar2022))
-
-saveRDS(temp_communes, "data/temperature.rds")
+saveRDS(temp_cities, "analyses/data/temperature_netherlands.rds")

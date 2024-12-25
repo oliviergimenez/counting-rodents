@@ -29,6 +29,7 @@ theme_set(theme_light())
 
 Here I illustrate the use of random effect site on abundance, and spatial autocorrelation. I use removal data on muskrats in the Netherlands. 
 
+First things first, load the packages we will need:
 ```{r}
 library(tidyverse)
 library(sf)
@@ -84,9 +85,8 @@ mutate(
   select(-interval_dates)
 ```
 
-
+Make it an `sf` object:
 ```{r}
-# create sf object
 muskrats_sf <- muskrats_3month %>%
   filter(Overlapping_Month %in% c("January", "February", "March")) %>%
   group_by(year, Overlapping_Month, decimalLatitude, decimalLongitude) %>%
@@ -97,9 +97,8 @@ muskrats_sf <- muskrats_3month %>%
                         agr = "constant")
 ```
 
-
+Map the data by year after 2010:
 ```{r}
-# map by year after 2010
 muskrats_sf %>% 
   filter(year > 2010) %>%
   ggplot() +
@@ -110,9 +109,8 @@ muskrats_sf %>%
   theme_void()
 ```
 
-
+Map the data by month for year 2010:
 ```{r}
-# map by month for year 2010
 muskrats_sf %>% 
   filter(year == 2010) %>%
   ggplot() +
@@ -123,9 +121,8 @@ muskrats_sf %>%
   theme_void()
 ```
 
-
+Get background map of netherlands w/ municipalities:
 ```{r}
-# get map of netherlands w/ municipalities
 # https://cran.r-project.org/web/packages/cbsodataR/vignettes/maps.html
 cbs_maps <- cbs_get_maps()
 netherlands <- cbs_get_sf("gemeente", 2023)
@@ -134,17 +131,22 @@ netherlands <- netherlands %>%
   st_transform(crs = st_crs(muskrats_sf))
 ```
 
+```{r}
+plot(netherlands)
+```
 
+
+Now let's count the number of muskrats removed in each municipality. 
+First we do a spatial join to associate points (muskrats) with polygons (cities):
 ```{r, eval=FALSE}
-# spatial join to associate points with polygons
 points_with_polygons <- st_join(muskrats_sf, 
                                 netherlands, 
                                 join = st_within)
 ```
 
 
+Second, summarize counts:
 ```{r, eval=FALSE}
-# summarize counts
 netherlands_with_counts <- points_with_polygons %>%
   group_by(statcode, month, year) %>% 
   summarize(
@@ -154,8 +156,8 @@ netherlands_with_counts <- points_with_polygons %>%
 ```
 
 
+Create all permutations of month, year and municipalities:
 ```{r, eval=FALSE}
-# create all perm of month, year and municipalities
 all_months_years <- expand.grid(
   month = unique(muskrats_sf$month), 
   year = unique(muskrats_sf$year),
@@ -164,8 +166,8 @@ all_months_years <- expand.grid(
 ```
 
 
+Fill in missing combinations of statcode, month, and year:
 ```{r, eval=FALSE}
-# fill in missing combinations of `statcode`, `month`, and `year`
 netherlands_with_counts <- all_months_years %>%
   left_join(netherlands_with_counts %>% 
               st_drop_geometry(), # temporarily drop geometry to avoid mismatches
@@ -176,20 +178,19 @@ netherlands_with_counts <- all_months_years %>%
 ```
 
 
+Save files
 ```{r, eval=FALSE}
-# save files
 st_write(, "shp/netherland_muskrats.shp")
 ```
 
-
+Read file:
 ```{r}
-# read file
 netherlands_with_counts <- st_read("shp/netherland_muskrats.shp")
 ```
 
 
+Map by month:
 ```{r}
-# map by month
 netherlands_with_counts %>% 
   ggplot() + 
   geom_sf(aes(fill=log(total_n)), color="#FFFFFF99") +
@@ -199,9 +200,8 @@ netherlands_with_counts %>%
   theme_void()
 ```
 
-
+Map by year (sum over months):
 ```{r}
-# map by year (sum over months)
 netherlands_with_counts %>% 
   group_by(year, statcode) %>%
   summarise(n = sum(total_n)) %>%
@@ -213,40 +213,12 @@ netherlands_with_counts %>%
   theme_void()
 ```
 
-
+Get temperatures:
 ```{r}
-# hydroriver data from https://www.hydrosheds.org/
-rivers <- st_read("shp/HydroRIVERS_v10_eu.shp")
+temp <- readRDS("data/temperature_netherlands.rds")
 ```
 
-
-```{r}
-# Find intersections
-intersect_indices <- st_intersects(rivers, netherlands, sparse = TRUE)
-```
-
-
-```{r}
-# Subset rivers based on intersecting indices
-rivers_netherlands <- rivers[lengths(intersect_indices) > 0, ]
-```
-
-
-```{r}
-ggplot() +
-  geom_sf(data = netherlands, fill = "lightgray", color = "black") +
-  geom_sf(data = rivers_netherlands, color = "blue", size = 0.5) +
-  coord_sf() +
-  theme_minimal() +
-  labs(
-    title = "River Network in the Netherlands",
-    caption = "Data: HydroSHEDS"
-  ) +
-  ggspatial::annotation_scale(location = "bl", width_hint = 0.5) +
-  ggspatial::annotation_north_arrow(location = "br", which_north = "true", style = ggspatial::north_arrow_fancy_orienteering)
-```
-
-Pick 2014
+Pick muskrats removal data for year 2014:
 ```{r}
 muskrats_ubms <- netherlands_with_counts %>%
   as_tibble %>%
@@ -255,20 +227,38 @@ muskrats_ubms <- netherlands_with_counts %>%
   pivot_wider(
     names_from = month,
     values_from = total_n) %>% 
-  select(January, February, March, site, year) %>%
+  select(January, February, March, site, statcode, year) %>%
   filter(year == 2014)
 muskrats_ubms
 ```
 
-
+Join muskrat removal data with covariate:
 ```{r}
-y <- as.matrix(muskrats_ubms[,c(1,2,3)])
-# I need replace 0 by NAs or rows with only 0s by NAs
+muskrats_ubms <- muskrats_ubms %>% 
+  left_join(temp)
 ```
 
-
+Remove cities for which I have no temperature data:
 ```{r}
-site.covs <- data.frame(site = as_factor(muskrats_ubms$site))
+mask <- !is.na(muskrats_ubms[,7])
+muskrats_ubms <- muskrats_ubms[mask,]
+```
+
+Get removal data:
+```{r}
+y <- as.matrix(muskrats_ubms[,c(1,2,3)])
+```
+
+For those cities where we have only 0's, replace by NA's as this probably means there was no effort:
+```{r}
+mask <- apply(y, 1, sum)
+y[mask == 0, ] <- NA
+```
+
+Format site and observation covariates:
+```{r}
+site.covs <- data.frame(site = as_factor(muskrats_ubms$site),
+                        temp = apply(muskrats_ubms[,7:9], 1, mean))
 
 time <- matrix(c('january','february','march'),
                nrow = nrow(y),
@@ -276,19 +266,19 @@ time <- matrix(c('january','february','march'),
                byrow = TRUE)
 ```
 
-
+Put everything in appropriate format for `ubms`:
 ```{r}
 umf <- unmarkedFrameMPois(y = y, 
                           siteCovs = site.covs,
-                   #     obsCovs = list(time = time),
-                        type = "removal")
+                          obsCovs = list(time = time),
+                          type = "removal")
 
 head(umf)
 ```
 
-
+Fit model:
 ```{r}
-fit <- stan_multinomPois(~1 ~1 + (1|site), # detection, abundance
+fit <- stan_multinomPois(~time ~scale(temp) + (1|site), # detection, abundance in that order
                          data = umf, 
                          chains = 2, 
                          iter = 1000,
@@ -297,51 +287,37 @@ fit <- stan_multinomPois(~1 ~1 + (1|site), # detection, abundance
 fit
 ```
 
-
+Check convergence:
 ```{r}
 traceplot(fit, pars = c("beta_state", "beta_det"))
 ```
 
-
+Get posterior densities:
 ```{r}
 plot_posteriors(fit)#, pars=c("beta_state[SistemaSilvopastoril]"))
 ```
 
-
+Plot abundance with respect to temperature:
 ```{r, eval=FALSE}
 plot_marginal(fit, submodel = "state")
 ```
 
-
+Get estimated capture probabilities:
 ```{r, eval=FALSE}
 plot_marginal(fit, submodel = "det")
 ```
 
-
+Report removal data and estimated abundance:
 ```{r}
-exp(coef(fit)[1])
+cbind(apply(y, 1, sum), predict(fit, submodel="state"))
 ```
 
 
-```{r}
-# detection
-plogis(coef(fit)[3])
-```
+  <!-- ggspatial::annotation_scale(location = "bl", width_hint = 0.5) + -->
+  <!-- ggspatial::annotation_north_arrow(location = "br",  -->
+  <!--                                   which_north = "true",  -->
+  <!--                                   style = ggspatial::north_arrow_fancy_orienteering) -->
 
-
-```{r, eval=FALSE}
-# faire courbe avec 
-extract(fit, "beta_state")
-
-predict(fit, submodel="state")
-apply(y, 1, sum)
-
-ran <- ranef(fit, submodel="state")
-head(ran$site[[1]])
-
-ran <- ranef(fit, submodel="state", summary=TRUE)
-head(ran$site[[1]])
-```
 
 
 # Session info

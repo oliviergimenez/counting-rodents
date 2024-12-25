@@ -152,6 +152,12 @@ Les hypothèses du modèle. Ici ou en discussion. Population fermée: pas de nai
 
 Lack of fit, overdispersion and negative binomial. 
 
+Si random effect site pas pertinent, on peut faire du spatial autocorrelation avec RSR. Easy avec ubms, possible aussi avec NIMBLE (https://wildlife.onlinelibrary.wiley.com/doi/10.1002/jwmg.22296). Pas possible avec unmarked. 
+
+Pour l'ouvert, possible avec unmarked, pas ubms. OK avec NIMBLE. 
+
+Pour NB, pas possible avec ubms. OK avec NIMBLE et unmarked. 
+
 # Acknowledgments
 
 I would like to warmly thank X and Y for data. 

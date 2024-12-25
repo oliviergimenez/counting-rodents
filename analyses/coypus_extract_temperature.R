@@ -10,8 +10,7 @@ Dir.Base <- getwd() # identifying the current directory
 Dir.Data <- file.path(Dir.Base, "data") # folder path for data
 
 # départements de la région
-dpts_occitanie <- st_read("data/departements-d-occitanie.shp") %>%
-  st_transform(crs = st_crs(dat_points))
+dpts_occitanie <- st_read("analyses/shp/departements-d-occitanie.shp") 
 
 # contours de la région
 loc_site <- dpts_occitanie %>% 
@@ -45,6 +44,7 @@ toccitanie <- CDownloadS(
   API_Key = "ccb31c25-7603-4cd7-8e88-97c8eb6e9cbd"
 )
 
+
 terra::writeRaster(x = toccitanie,
                   filename = "shp/temp.tif",
                   overwrite = TRUE)
@@ -75,7 +75,7 @@ Plot.SpatRast(toccitanie$Toccitanie_14) +
             st_transform(crs = 4326), 
           fill = NA)
 
-# extract rainfall per commune
+# extract temperature per commune
 departements <- st_read("shp/departements-d-occitanie.shp")
 mask <- departements$nom_officie.2 == "HERAULT" 
 herault <- departements[mask, ]
