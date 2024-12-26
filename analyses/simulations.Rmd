@@ -114,7 +114,7 @@ nb_sites <- c(1, 5, 10, 50)
 nb_occasions <- c(3, 5, 10)
 ```
 
-Set the number of simulations to 100:
+Set the number of simulations to 500:
 
 ```{r}
 n_sim <- 500

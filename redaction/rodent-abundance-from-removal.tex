@@ -135,7 +135,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 \hypersetup{
-  pdftitle={Estimating coypu (Myocastor coypus) abundance using removal data},
+  pdftitle={Estimating invasive rodent abundance using removal data and hierarchical models},
   pdfauthor={Olivier Gimenez1*},
   colorlinks=true,
   linkcolor={RoyalBlue},
@@ -144,7 +144,7 @@
   urlcolor={RoyalBlue},
   pdfcreator={LaTeX via pandoc}}
 
-\title{Estimating coypu (Myocastor coypus) abundance using removal data}
+\title{Estimating invasive rodent abundance using removal data and hierarchical models}
 \author{Olivier Gimenez\textsuperscript{1}*}
 \date{2024-12-26}
 
@@ -186,39 +186,23 @@ While standard removal methods are well-established (\citeproc{ref-Moran1951}{Mo
 
 In this paper, I showcase the application of a hierarchical formulation of removal models, the multinomial N-mixture model (\citeproc{ref-Dorazio2005}{Dorazio et al. 2005}), to estimate the abundance of rodents in Europe. In this study, I focus on the coypu (Myocastor coypus) in France and the muskrat (Ondatra zibethicus) in the Netherlands. Both species are semi-aquatic rodents introduced to Europe in the early 20th century following escapes or releases from fur farms. The coypu, native to South America, has formed widespread invasive populations in France (\citeproc{ref-Bonnet2023}{Bonnet et al. 2023}), where it causes significant damage to infrastructure and crops. Additionally, it serves as a healthy carrier of leptospirosis, a zoonotic disease with potentially serious consequences. Similarly, the muskrat, native to North America, has established extensive populations in the Netherlands. By burrowing into riverbanks, dykes, and dams, muskrats compromise the integrity of these structures, posing a threat to public safety (\citeproc{ref-vanloon2017}{Loon et al. 2017}).
 
-Using removal data, I demonstrate the application of the multinomial N-mixture model to estimate the abundance of coypu and muskrat populations. First, I conduct a simulation study to evaluate the model's performance under varying numbers of sampling sites and sampling occasions. Second, I present a case on a coypu population in France to illustrate the hierarchical structure of the multinomial N-mixture model, demonstrating how covariates can be incorporated to account for variations in abundance and capture probabilities. Third, I use a case study on muskrats in the Netherlands to demonstrate the integration of random effects within the model. To facilitate reproducibility, I provide the accompanying code and data, aiming to promote the broader adoption of removal models in the study of biological invasions.
+Using removal data, I demonstrate the application of the multinomial N-mixture model to estimate the abundance of coypu and muskrat populations. First, I conduct a simulation study to evaluate the model's performance under varying numbers of sampling sites and sampling occasions. Second, I present a case study on a coypu population in France to illustrate the hierarchical structure of the multinomial N-mixture model, demonstrating how covariates can be incorporated to account for variations in abundance and capture probabilities. Third, I use a case study on muskrats in the Netherlands to demonstrate the integration of random effects within the model. To facilitate reproducibility, I provide the accompanying code and data, aiming to promote the broader adoption of removal models in the study of biological invasions.
 
 \section{Methods}\label{methods}
 
 \subsection{Multinomial N-mixture model}\label{multinomial-n-mixture-model}
 
-Think of a die with six sides. The die has a 1 in 6 chance of landing on face 1, the same for face 2, and so on. If I roll the die 30 times, I expect to get face 1 five times, face 2 five times, and so on, on average. In this experiment, \(y_1\), the vector made of the number of 1s, \(y_2\), the number of 2s, \(\ldots\), and \(y_6\), the number of 6s, follows a multinomial distribution with parameters the number of rolls (30) and probabilities \((1/6, 1/6, ..., 1/6)\).
+Think of a dice with six sides. The dice has a 1 in 6 chance of landing on face 1, the same for face 2, and so on. If I roll the dice 30 times, I expect to get face 1 five times, face 2 five times, and so on, on average. In this experiment, \(y_1\), the vector made of the number of 1s, \(y_2\), the number of 2s, \(\ldots\), and \(y_6\), the number of 6s, follows a multinomial distribution with parameters the number of rolls (30) and probabilities \((1/6, 1/6, ..., 1/6)\).
 
-Now think of a removal campaign conducted over 3 months. We record the number of coypu \(y_1\) captured in month 1, \(y_2\) in month 2, \(y_3\) in month 3, and let \(y_4\) represent the number of coypu never captured. Let \(p\) be the probability of capturing a coypu in a given month. The probability of capturing a coypu in the first month is \(\pi_1 = p\). The probability of capturing a coypu in the second month is \(\pi_2 = (1-p)p\) the probability of not capturing it in the first month \((1 - p)\) multiplied by the probability of capturing it in the second month \(p\). The probability of capturing a coypu in the third month is \(\pi_3 = (1-p)(1-p)p\), the probability of not capturing it in the first and second months, \((1 - p)(1 - p)\), multiplied by the probability of capturing it in the third month, \(p\). Finally, the probability of never being captured is \(\pi_4 = 1 - (p + (1-p)p + (1-p)(1-p)p)\) the complement of the probability of being captured in the first, second, or third month.
+Now think of a removal campaign conducted over 3 months. We record the number of rodents \(y_1\) captured in month 1, \(y_2\) in month 2, \(y_3\) in month 3, and let \(y_4\) represent the number of rodents never captured. Let \(p\) be the probability of capturing a rodent in a given month. The probability of capturing a rodent in the first month is \(\pi_1 = p\). The probability of capturing a rodent in the second month is \(\pi_2 = (1-p)p\) the probability of not capturing it in the first month \((1 - p)\) multiplied by the probability of capturing it in the second month \(p\). The probability of capturing a rodent in the third month is \(\pi_3 = (1-p)(1-p)p\), the probability of not capturing it in the first and second months, \((1 - p)(1 - p)\), multiplied by the probability of capturing it in the third month, \(p\). Finally, the probability of never being captured is \(\pi_4 = 1 - (p + (1-p)p + (1-p)(1-p)p)\) the complement of the probability of being captured in the first, second, or third month. If we assume that \(N\) represents the abundance, then we have that the vector of counts \((y_1, y_2, y_3, y_4)\) follows a multinomial distribution with parameters \(N\) and probabilities \((\pi_1,\pi_2,\pi_3,\pi_4)\). In general, we assume that \(N\) follows a Poisson distribution with parameter the expected number of rodents denoted \(\lambda\). And there you have it, the multinomial N-mixture model for a removal experiment, which is similar to throwing a dice \(N\) times and the \(\pi's\) give the probabilities that I get a given face of that dice. In general, we monitor rodents on several sites \(i = 1,\ldots,S\) and we need to estimate local population size \(N_i\) for site \(i\). AJOUTER L'INTERET D'AVOIR PLUSIEURS SITES (cf ABSTRACT PAPIER DORAZIO) AND POLISH TEXT.
 
-If we assume that \(N\) represents the abundance, then we have that the vector of counts \((y_1, y_2, y_3, y_4)\) follows a multinomial distribution with parameters \(N\) and probabilities \((\pi_1,\pi_2,\pi_3,\pi_4)\). INTRODUCE \(N \sim \text{Poisson}(\lambda)\). AND NEGATIVE BINOMIAL. ALSO SEVERAL SITES. EXPLAIN LA PARTIE HIERARCHIQUE ICI. METTRE UN EFFET ALEATOIRE QUELQUE PART?
-
-FAIRE LE LIEN ENTRE LE DE ET LA CAMPAGNE DE PIEGEAGE.
-
-Parameters \(N\), \(p\), and \(\lambda\) are unknown and need to be estimated. In a frequentist framework, marginalization is performed by summing over all possible values of \(N\). In a Bayesian framework, all these parameters are estimated directly, which simplifies the process.
-
-Both parameters, \(N\) and \(p\), can be modeled as functions of explanatory spatial variables, in the spirit of generalized linear models, and logistic regressions for example.
-
-Citer chapitre dans bouquin de Kéry and Royle qui va bien (vol I).
-
-\subsection{Implementation}\label{implementation}
-
-For all analyses, I used the statistical language \texttt{R} (\citeproc{ref-R_Core_Team_2024}{R Core Team 2024}). I used the \texttt{tidyverse} (\citeproc{ref-Wickham_2019}{Wickham et al. 2019}) suite of packages for data manipulation and visualization and \texttt{sf} (\citeproc{ref-Pebesma_2023}{Pebesma and Bivand 2023}) for dealing with spatial data. I fitted models within the frequentist framework\ldots{} unmarked (\citeproc{ref-Kellner_2023}{Kellner et al. 2023}). Bayesian framework using the \texttt{ubms} (\citeproc{ref-Kellner_2021}{Kellner et al. 2021}) package. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and uniform distributions for the partial sill, range parameter and detection probability. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (\textless{} 1.1), effective sample size (\textgreater{} 100), and visual inspection of the trace plots.
+Parameters \(N\), \(p\), and \(\lambda\) are unknown and need to be estimated. In a frequentist framework, marginalization is performed by summing over all possible values of \(N\) (\citeproc{ref-Dorazio2005}{Dorazio et al. 2005}). In a Bayesian framework, all these parameters are estimated directly, which simplifies the process (\citeproc{ref-RD2006}{Royle and Dorazio 2006}). Both parameters, \(\lambda\) and \(p\), can be modeled as functions of explanatory spatial and temporal variables, in the spirit of generalized linear models, and Poisson or logistic regressions for example. I warmly recommend chapter 7 in Kéry and Royle (\citeproc{ref-KR2015}{2015}) for a detailed description of the multinomial mixture model.
 
 \section{Simulations}\label{simulations}
 
-Voir un peu comment se comporte le modèle en fonction du nombre de sites et d'occasions.
-
-I conducted a simulation study to evaluate model performance by examining parameter bias and prediction error. I simulated a stream network over \(S = 100\) sites using an exponential tail-down structure (inspired by the case study, see previous section) with partial sill \(\sigma^2 = 2\) and range parameter \(\theta = 10\). I considered a single covariate, normally distributed with mean 0 and standard deviation 1, with a linear effect (on the logit scale) on the occupancy probability with intercept \(\beta_0 = 0.5\) and slope \(\beta_1 = 1\). I simulated the observation process with a detection probability \(p = 0.6\) across 5 repeated visits per site. I fitted both models, with and without spatial autocorrelation, to the simulated data, and I repeated this procedure 100 times. Eventually, I calculated the relative bias for each parameter and the root mean square prediction error (RMSPE) for each model. Unmarked only to speed up process.
+I conducted a simulation study to evaluate the model's performance by examining parameter bias under varying numbers of sampling sites and sampling occasions. I simulated removal data over 1, 5, 10 and 50 sites using a Poisson distribution with expected number of animals \(\lambda\) between 10 and 100 (20 values) for the ecological process. I simulated the observation process with a capture probability \(p\) varying between 0.3 and 0.9 (20 values) across 3, 5 and 10 occasions per site. In total, I considered 4800 scenarios. I fitted the multinomial N-mixture model to the simulated data within the frequentist framework using function \texttt{multinomPois()} in the \texttt{R} package \texttt{unmarked} (\citeproc{ref-Kellner_2023}{Kellner et al. 2023}), and I repeated this procedure 500 times. Eventually, I calculated the relative bias for each parameter.
 
 \section{Case studies}\label{case-studies}
-
-Temperature. Citer krigR. Month effect. First case study for hierarchical and covariates. Second case study for random effect.
 
 \subsection{Coypus in France}\label{coypus-in-france}
 
@@ -229,6 +213,14 @@ To illustrate the approach, I investigated the impact of human disturbance on th
 \subsection{Muskrats in the Netherlands}\label{muskrats-in-the-netherlands}
 
 Pour muskrats: \url{https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014\#anchor-versions} and \url{https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580}.
+
+\subsection{Implementation}\label{implementation}
+
+Temperature. Citer \texttt{krigR} (\citeproc{ref-Kusch_2022}{Kusch and Davy 2022}). Month effect. First case study for hierarchical and covariates. Second case study for random effect.
+
+Bayesian and MCMC easier to implement random effects.
+
+For all analyses, I used the statistical language \texttt{R} (\citeproc{ref-R_Core_Team_2024}{R Core Team 2024}). I used the \texttt{tidyverse} (\citeproc{ref-Wickham_2019}{Wickham et al. 2019}) suite of packages for data manipulation and visualization and \texttt{sf} (\citeproc{ref-Pebesma_2023}{Pebesma and Bivand 2023}) for dealing with spatial data. Bayesian framework using the \texttt{ubms} (\citeproc{ref-Kellner_2021}{Kellner et al. 2021}) package, also \texttt{NIMBLE} (\citeproc{ref-de_Valpine_2017}{de Valpine et al. 2017}). I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and a uniform distribution for the standard deviation of the random effects. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (\textless{} 1.1), effective sample size (\textgreater{} 100), and visual inspection of the trace plots.
 
 \section{Results and discussion}\label{results-and-discussion}
 
@@ -302,6 +294,9 @@ Chen, W., and G. F. Ficetola. 2019. Conditionally autoregressive models improve 
 \bibitem[\citeproctext]{ref-Couturier2024}
 Couturier, T., J. Steinmetz, P. Defos du Rau, D. Marc, E. Trichet, R. Gomes, and A. Besnard. 2023. Intensive agriculture as the main limiting factor of the otter's return in southwest france. Biological Conservation 279:109927.
 
+\bibitem[\citeproctext]{ref-de_Valpine_2017}
+de Valpine, P., D. Turek, C. Paciorek, C. Anderson-Bergman, D. Temple Lang, and R. Bodik. 2017. \href{https://doi.org/10.1080/10618600.2016.1172487}{Programming with models: Writing statistical algorithms for general model structures with {NIMBLE}}. Journal of Computational and Graphical Statistics 26:403--413.
+
 \bibitem[\citeproctext]{ref-Diagne2023}
 Diagne, C., L. Ballesteros-Mejia, R. Cuthbert, T. Bodey, J. Fantle-Lepczyk, E. Angulo, A. Bang, G. D. G, and F. Courchamp. 2023. Economic costs of invasive rodents worldwide: The tip of the iceberg. PeerJ 11:e14935.
 
@@ -322,6 +317,9 @@ Kéry, M., and J. A. Royle. 2015. Applied hierarchical modeling in ecology: Anal
 
 \bibitem[\citeproctext]{ref-Kery2008}
 Kéry, M., and B. Schmidt. 2008. Imperfect detection and its consequences for monitoring in conservation. Community Ecology 9:207--216.
+
+\bibitem[\citeproctext]{ref-Kusch_2022}
+Kusch, E., and R. Davy. 2022. \href{https://doi.org/10.1088/1748-9326/ac48b3}{KrigR-a tool for downloading and statistically downscaling climate reanalysis data}. Environmental Research Letters 17.
 
 \bibitem[\citeproctext]{ref-Link2018}
 Link, W. A., S. J. Converse, A. A. Yackel Adams, and N. J. Hostetter. 2018. Analysis of population change and movement using robust design removal data. Journal of Agricultural, Biological and Environmental Statistics 23:463--477.
@@ -358,6 +356,9 @@ Roy, H. E., A. Pauchard, P. J. Stoett, T. Renard Truong, L. A. Meyerson, S. Bach
 
 \bibitem[\citeproctext]{ref-RD2008}
 Royle, J. A., and R. M. Dorazio. 2008. Hierarchical modeling and inference in ecology: The analysis of data from populations, metapopulations and communities. Academic Press. San Diego, California.
+
+\bibitem[\citeproctext]{ref-RD2006}
+Royle, J. andrew, and R. Dorazio. 2006. Hierarchical models of animal abundance and occurrence. Journal of Agricultural, Biological, and Environmental Statistics 11:249--263.
 
 \bibitem[\citeproctext]{ref-Santos2022}
 Santos-Fernandez, E., J. M. Ver Hoef, E. E. Peterson, J. McGree, D. J. Isaak, and K. Mengersen. 2022. Bayesian spatio-temporal models for stream networks. Computational Statistics \& Data Analysis 170:107446.
