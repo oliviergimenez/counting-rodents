@@ -27,7 +27,7 @@ theme_set(theme_light())
 
 # Motivation
 
-Here I illustrate the use of random effect site on abundance, and spatial autocorrelation. I use removal data on muskrats in the Netherlands. 
+Here I illustrate the use of random effect site on abundance. I use removal data on muskrats in the Netherlands. 
 
 First things first, load the packages we will need:
 ```{r}
