@@ -213,6 +213,60 @@ Get temperatures:
 temp <- readRDS("data/temperature_netherlands.rds")
 ```
 
+Visualize the removal data:
+```{r}
+counts <- netherlands_with_counts %>%
+  filter(year == 2014) %>%
+  group_by(statcode) %>%
+  mutate(removal_sum = sum(total_n)) %>%
+  slice(1) %>%
+  select(-month) %>%
+  ggplot() + 
+  geom_sf(aes(fill = log(removal_sum))) +
+  scale_fill_viridis_c(direction = -1, option = "A")+ 
+  labs(fill = "number of muskrats \nremoved (log)") +
+  ggspatial::annotation_scale(location = "bl", 
+                              width_hint = 0.5,
+                              height = unit(0.1, "cm"),       # Adjust the height of the scale bar
+                              text_cex = 0.5) +
+  ggspatial::annotation_north_arrow(location = "br",
+                                    which_north = "true",
+                                    style = ggspatial::north_arrow_fancy_orienteering,
+                                    height = unit(1, "cm"),       # Adjust height of the north arrow
+                                    width = unit(.8, "cm"))
+counts
+```
+
+Visualize temperature:
+```{r}
+av_temp <- apply(temp[,2:4], 1, mean, na.rm = TRUE)
+temp$av_temp <- av_temp
+tmp <- netherlands_with_counts %>%
+  filter(year == 2014) %>%
+  left_join(temp) %>%
+  ggplot() + 
+  geom_sf(aes(fill = av_temp)) +
+  scale_fill_viridis_c(direction = -1)+ 
+  labs(fill = "temperature (°C)") +
+  ggspatial::annotation_scale(location = "bl", 
+                              width_hint = 0.5,
+                              height = unit(0.1, "cm"),       # Adjust the height of the scale bar
+                              text_cex = 0.5) +
+  ggspatial::annotation_north_arrow(location = "br",
+                                    which_north = "true",
+                                    style = ggspatial::north_arrow_fancy_orienteering,
+                                    height = unit(1, "cm"),       # Adjust height of the north arrow
+                                    width = unit(.8, "cm"))
+tmp
+```
+
+Assemble plots:
+```{r}
+counts / tmp
+ggsave(filename = "dat_muskrats.png", height = 10, width = 6)
+```
+
+
 Pick muskrats removal data for year 2014:
 ```{r}
 muskrats_ubms <- netherlands_with_counts %>%
@@ -238,6 +292,7 @@ Remove cities for which I have no temperature data:
 mask <- !is.na(muskrats_ubms[,7])
 muskrats_ubms <- muskrats_ubms[mask,]
 ```
+
 
 Get removal data:
 ```{r}
@@ -276,7 +331,9 @@ Fit model:
 fit <- stan_multinomPois(~time ~scale(temp) + (1|site), # detection, abundance in that order
                          data = umf, 
                          chains = 2, 
-                         iter = 5000,
+                         iter = 10000,
+                         warmup = 5000,
+                         thin = 5,
                          prior_intercept_state = normal(0, 1.5),
                          prior_coef_state = normal(0, 1.5))
 ```
@@ -451,9 +508,9 @@ Build maps:
 ```{r}
 plot_mean <- ggplot() + 
   geom_sf(data = netherlands, fill = NA) + 
-  geom_sf(data = N_to_map, aes(fill = N_mean - removed), color = "#FFFFFF99") +
+  geom_sf(data = N_to_map, aes(fill = log(N_mean)), color = "#FFFFFF99") +
   scale_fill_viridis_c(direction = -1, option = "A") + 
-  labs(fill = "# muskrats") +
+  labs(fill = "# muskrats (log)") +
   theme(
     legend.title = element_text(hjust = 0.5, vjust = 1),
  #   legend.position = "top",
@@ -506,9 +563,188 @@ print(plot_combined)
 ```
 
 
-```{r eval=FALSE}
+```{r}
 ggsave(filename = "muskrats.png", plot = plot_combined, width = 10, height = 6)
 ```
+
+
+## Varying-coefficient model with `NIMBLE`
+
+Format data:
+```{r}
+muskrats_ubms <- netherlands_with_counts %>%
+  as_tibble %>%
+  select(-geometry, - statnaam) %>%
+  mutate(site = dense_rank(statcode)) %>% # renumber cities
+  pivot_wider(
+    names_from = month,
+    values_from = total_n) %>% 
+  select(January, February, March, site, statcode, year)
+muskrats_ubms
+```
+
+Join with temperature:
+```{r}
+temp_allyear <- readRDS("data/temperature_netherlands_allperiod.rds")
+muskrats_ubms <- muskrats_ubms %>% 
+  left_join(temp_allyear)
+```
+
+Make it an array:
+```{r}
+y <- base::array(NA, dim = c(342, 3, 28))
+for (i in 1:342){
+    for (k in 1987:2014){
+      y[i,1:3,k-1986] <- muskrats_ubms %>% 
+        filter(site == i, year == k) %>% 
+        select(January, February, March) %>%
+        as_vector()
+    }
+}
+```
+
+Idem for temperature:
+```{r}
+tt <- matrix(NA, nrow = 342, ncol = 28)
+for (i in 1:342){
+    for (k in 1987:2014){
+      tt[i,k-1986] <- muskrats_ubms %>% 
+        filter(site == i, year == k) %>% 
+        select(mean_temperature) %>%
+        as_vector()
+    }
+}
+```
+
+Remove cities for which I have no temperature data:
+```{r}
+mask <- !is.na(apply(tt, 1, sum))
+tt <- tt[mask,]
+y <- y[mask,,]
+```
+
+For those cities where we have only 0's, there was probably no effort, just ignore them:
+```{r}
+mask <- apply(apply(y, c(1,3), sum), 1, sum) == 0
+tt <- tt[!mask,]
+y <- y[!mask,,]
+```
+
+Get constants and data ready:
+```{r}
+K <- dim(y)[1] # nsites
+J <- dim(y)[2] # nsurveys
+L <- dim(y)[3] # nyears
+temp <- tt
+constants <- list(K = K, J = J, L = L) 
+data <- list(y = y,
+             n = apply(y, c(1,3), sum),
+             temp = (temp - mean(temp))/sd(temp))
+```
+
+Code of a model with temperature on abundance varying over time, and month on capture:
+```{r}
+# code
+code <- nimbleCode({
+  for (i in 1:K) { # loop over sites
+    # prob of cells
+    pi[i,1] <- p[i,1] # survey 1
+    for(j in 2:J){ # loop over surveys > 1
+      pi[i,j] <- prod(1 - p[i,1:(j-1)]) * p[i,j]
+    }
+    pcap[i] <- sum(pi[i,1:J])
+    
+    # capture prob
+    for(j in 1:J){ # loop over surveys
+      cloglog(p[i,j]) <- alpha[j]
+      pic[i,j] <- pi[i,j] / pcap[i]
+    }
+  }
+  for (l in 1:L){ # loop over years
+    for (i in 1:K){ # loop over sites
+      # likelihood: observation
+      y[i,1:J,l] ~ dmulti(pic[i,1:J], n[i,l]) # multinomial for each site/year
+      n[i,l] ~ dbin(pcap[i], N[i,l]) # for each site/year
+      # likelihood: process
+      N[i,l] ~ dpois(lambda[i,l]) # for each site
+      log(lambda[i,l]) <- intercept + slope[l] * temp[i,l] #+ eps[i]
+    } # end of loop over sites
+  }  # end of loop over years
+
+  intercept ~ dnorm(0, sd = 1.5)
+#  for (i in 1:L){
+#    eps[i] ~ dnorm(0, sd = sdeps)
+#  }  
+#  sdeps ~ dunif(0, 10)
+  for (j in 1:J){
+    alpha[j] ~ dnorm(0, sd = 1.5)
+  }
+  for (j in 1:2){
+    beta[j] ~ dnorm(0, sd = 1.5)
+  }
+  for (l in 1:L){
+    slope[l] <- beta[1] + beta[2] * (l-14.5)/8.23
+  }
+})
+```
+
+Pick initial values:
+```{r}
+pic.init <- array(runif(K*J,0.05,0.15), c(K,J))
+pic.init <- pic.init / apply(pic.init, 1, sum)
+Nin <- apply(y, c(1,3), sum) + 10
+inits <- function(){list(alpha = rep(0.1, J), 
+                         pic = pic.init, 
+                         beta = rep(0,2), 
+                         N = Nin)}
+```
+
+Set things up:
+```{r}
+# create Nimble model
+Rmodel <- nimbleModel(code = code, 
+                      constants = constants, 
+                      data = data, 
+                      inits = inits())
+Rmcmc <- compileNimble(Rmodel, showCompilerOutput = F)
+#ModSpec <- configureMCMC(Rmodel, onlyRW = TRUE) # RW sampling 
+ModSpec <- configureMCMC(Rmodel) # Nimble picks the samplers
+#ModSpec <- configureMCMC(Rmodel, onlySlice = TRUE) # slice sampling 
+ModSpec$resetMonitors()
+#ModSpec$addMonitors(c("alpha","beta","sdeps","intercept","slope"))
+ModSpec$addMonitors(c("alpha","beta","intercept","slope"))
+Cmcmc <- buildMCMC(ModSpec)
+Cmodel <- compileNimble(Cmcmc, project = Rmodel, resetFunctions = TRUE)
+```
+
+Run model:
+```{r}
+ni <- 5000
+nb <- 500
+nc <- 2
+nt <- 1
+samp <- runMCMC(Cmodel, 
+                niter = ni, 
+                nburnin = nb, 
+                nchains = nc, 
+                thin = nt, 
+                inits = inits,  
+                samplesAsCodaMCMC = TRUE)
+```
+
+Get a summary of the results:
+```{r}
+MCMCsummary(samp, params=c("beta"))
+```
+
+Check convergence:
+```{r}
+MCMCtrace(samp, 
+          params = c("beta"), 
+          pdf = FALSE)
+```
+
+
 
 
 <!-- ## Overdispersion and negative binomial distribution with `NIMBLE` -->

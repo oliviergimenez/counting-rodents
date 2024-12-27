@@ -84,9 +84,9 @@ An alternative approach involves the use of removal methods [@Rodriguez2021] in 
 
 While standard removal methods are well-established [@Moran1951; @Zippin1956; @Zippin1958; @Rodriguez2021], recent advances in population ecology remain underutilized in the context of invasive species. Hierarchical models, in particular, have gained traction [@RD2008; @KR2015] due to their ability to: (i) explicitly separate biological processes of interest (e.g., population dynamics) from observation processes (e.g., imperfect detection), thus enabling more accurate modeling; (ii) incorporate environmental, spatial, or temporal covariates at multiple levels, allowing exploration of how various factors influence ecological processes; and (iii) share information across groups by modeling parameters hierarchically with random effects, which improves estimates for groups with fewer data.
 
-In this paper, I showcase the application of a hierarchical formulation of removal models, the multinomial N-mixture model [@Dorazio2005], to estimate the abundance of rodents in Europe. In this study, I focus on the coypu (Myocastor coypus) in France and the muskrat (Ondatra zibethicus) in the Netherlands. Both species are semi-aquatic rodents introduced to Europe in the early 20th century following escapes or releases from fur farms. The coypu, native to South America, has formed widespread invasive populations in France [@Bonnet2023], where it causes significant damage to infrastructure and crops. Additionally, it serves as a healthy carrier of leptospirosis, a zoonotic disease with potentially serious consequences. Similarly, the muskrat, native to North America, has established extensive populations in the Netherlands. By burrowing into riverbanks, dykes, and dams, muskrats compromise the integrity of these structures, posing a threat to public safety [@vanloon2017].
+In this paper, I showcase the application of a hierarchical formulation of removal models, the multinomial N-mixture model [@Dorazio2005], to estimate the abundance of rodents in Europe. In this study, I focus on the coypu (*Myocastor coypus*) in France and the muskrat (*Ondatra zibethicus*) in the Netherlands. Both species are semi-aquatic rodents introduced to Europe in the early 20th century following escapes or releases from fur farms. The coypu, native to South America, has formed widespread invasive populations in France [@Bonnet2023], where it causes significant damage to infrastructure and crops. Additionally, it serves as a healthy carrier of leptospirosis, a zoonotic disease with potentially serious consequences. Similarly, the muskrat, native to North America, has established extensive populations in the Netherlands. By burrowing into riverbanks, dykes, and dams, muskrats compromise the integrity of these structures, posing a threat to public safety [@vanloon2017].
 
-Using removal data, I demonstrate the application of the multinomial N-mixture model to estimate the abundance of coypu and muskrat populations. First, I conduct a simulation study to evaluate the model's performance under varying numbers of sampling sites and sampling occasions. Second, I present a case study on a coypu population in France to illustrate the hierarchical structure of the multinomial N-mixture model, demonstrating how covariates can be incorporated to account for variations in abundance and capture probabilities. Third, I use a case study on muskrats in the Netherlands to demonstrate the integration of random effects within the model. To facilitate reproducibility, I provide the accompanying code and data, aiming to promote the broader adoption of removal models in the study of biological invasions.
+Using removal data, I demonstrate the application of the multinomial N-mixture model to estimate the abundance of rodent populations. First, I conduct a simulation study to evaluate the model's performance under varying numbers of sampling sites and sampling occasions. Second, I present a case study on a coypu population in France to illustrate the hierarchical structure of the multinomial N-mixture model, demonstrating how covariates can be incorporated to account for variations in abundance and capture probabilities. Third, I use a case study on muskrats in the Netherlands to demonstrate the integration of random effects within the model. To facilitate reproducibility, I provide the accompanying code and data, aiming to promote the broader adoption of removal models in the study of biological invasions.
 
 # Methods
 
@@ -100,6 +100,8 @@ Now think of a removal campaign conducted over 3 months. We record the number of
 
 Parameters $N$, $p$, and $\lambda$ are unknown and need to be estimated. In a frequentist framework, marginalization is performed by summing over all possible values of $N$ [@Dorazio2005]. In a Bayesian framework, all these parameters are estimated directly, which simplifies the process [@RD2006]. Both parameters, $\lambda$ and $p$, can be modeled as functions of explanatory spatial and temporal variables, in the spirit of generalized linear models, and Poisson or logistic regressions for example. I warmly recommend chapter 7 in @KR2015 for a detailed description of the multinomial mixture model. 
 
+MODEL HYPOTHESES. Ici ou en discussion.
+
 <!-- The term multinomial N-mixture stands for the mixture of a multinomial observation model with respect to a Poisson model for abundance. -->
 
 # Simulations
@@ -110,39 +112,60 @@ I conducted a simulation study to evaluate the model's performance by examining 
 
 <!-- We can express the model in terms of the conditional multinomial observation model. This method breaks the multinomial observation model up into two pieces: a multinomial conditioned on a known sample size (being the number of encountered individuals) and a binomial with the unknown sample size. -->
 
+EXPLAIN THE AIM OF EACH CASE STUDY.
+
 ## Coypus in France
 
-Tableau avec les données. Et les covariables. 
+Removal data on coypus were collected from annual control operations conducted since 2015 in several cities within the Hérault department, located in the Occitanie region of southern France. These operations are carried out year-round, with the exception of July and August. Coypus are trapped using cages by a network of volunteers coordinated by the Syndicat Mixte du Bassin de l'Or and the Fédération Départementale des Chasseurs de l'Hérault. For this study, I focus on data from 2022, specifically from sampling occasions in February, March, and April. The data, covering $S = 6$ cities, are summarized in Table \@ref(tab:coypus). I fitted a model where the expected number of coypus was modeled as a function of temperature, while the capture probability was allowed to vary by month.
 
-To illustrate the approach, I investigated the impact of human disturbance on the occupancy of European otter (*Lutra lutra*) in France. The otter, a semi-aquatic mammal, faced near extinction in the 20th century in France due to extensive hunting for its fur. With hunting bans and protection efforts, the species is now recolonizing the country, and the ecological question is assessing its current distribution. Data on otter detection and non-detection were collected in 2003-2005 in the Midi-Pyrénées region. Observers searched for signs of otter presence at a small river catchment scale, which was used as the spatial sampling unit. 
+\begin{table}[ht]
+\centering
+\begin{tabular}{lcccc}
+\hline
+\textbf{} & \textbf{Removed in} & \textbf{Removed in} & \textbf{Removed in} & \textbf{Averaged} \\
+\textbf{City} & \textbf{February} & \textbf{March} & \textbf{April} & \textbf{temperature}\\
+\hline
+Candillargues & 18	& 12	& 38 & 9.5 \\
+Lansargues    & 15	& 17	& 75 & 8.8 \\
+Mauguio       & 20	& 9	& 6 & 9.2 \\
+Saint-Nazaire-de-Pézan & 169	& 41	& 15 & 9.3 \\
+Saint-Just    & 85	& 61	& 77 & 9.2 \\
+Valergues     & 0 & 1	& 3 & 9.4 \\
+\hline
+\end{tabular}
+\caption{Number of invasive coypus removed monthly, and averaged 3-month temperature in several cities of the Hérault department for the year 2022.}
+\label{tab:coypus}
+\end{table}
 
 ## Muskrats in the Netherlands
 
-Pour muskrats: https://ipt.nlbif.nl/resource?r=hwh_muskrat_1987-2014#anchor-versions and https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580. 
+Removal data on muskrats in the Netherlands were collected by professional trappers. The data were registered in atlas blocks (5 x 5 km) per periods of four weeks. For this study, I focus on data from 2014, specifically from sampling occasions in January, February, and March. The data were made available through the LIFE MICA project [@Cartuyvels2024] and can be freely downloaded from <https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580>. I fitted the same model as for the coypus data, except that I added a site random effect on abundance to accommodate the spatial variation that was not explained by temperature. 
 
 ## Implementation
 
-Temperature. Citer `krigR` `r citep(citation("KrigR"))`. Month effect. First case study for hierarchical and covariates. Second case study for random effect. 
+For all analyses, I used the statistical language `R` `r citep(citation())`. I used the `tidyverse` `r citep(citation("tidyverse"))` suite of packages for data manipulation and visualization, `sf` `r citep(citation("sf")[[1]])` for dealing with spatial data and `krigR` `r citep(citation("KrigR"))` to get temperature data. For the two case studies, I fitted models within a Bayesian framework using Markov chain Monte Carlo (MCMC) algorithms. I used both the `NIMBLE` `r citep(citation("nimble")[[1]])` and the `ubms` `r citep(citation("ubms"))` packages. The former offers high flexibility, enabling users to define custom likelihoods, though it requires manual coding, while the latter features simpler syntax with pre-built multinomial N-mixture models, albeit limited to a Poisson distribution for abundance. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and a uniform distribution for the standard deviation of the random effects. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (< 1.1), effective sample size (> 100), and visual inspection of the trace plots. 
 
-Bayesian and MCMC easier to implement random effects. 
+# Results
 
-For all analyses, I used the statistical language `R` `r citep(citation())`. I used the `tidyverse` `r citep(citation("tidyverse"))` suite of packages for data manipulation and visualization and `sf` `r citep(citation("sf")[[1]])` for dealing with spatial data.  Bayesian framework using the `ubms` `r citep(citation("ubms"))` package, also  `NIMBLE` `r citep(citation("nimble")[[1]])`. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and a uniform distribution for the standard deviation of the random effects. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (< 1.1), effective sample size (> 100), and visual inspection of the trace plots. 
+The results of the simulation study underscored the importance of accounting for spatial autocorrelation - see Figure \@ref(fig:bias). Ignoring spatial autocorrelation led to a relative bias of -26% in the slope of the covariate, compared to just 0.7% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330%), this outcome was expected.
 
-# Results and discussion
+Coypus case study. The temperature had a negative effect on abundance, with a slope estimated at -0.14 (-0.22, -0.07). Capture probabilities were estimated at 0.43 (0.29, 0.49) in February, 0.35 (0.19, 0.44) in March and 0.84 (0.35, 1.00) in April. Posterior distributions of abundance are in Figure \@ref(fig:pdcoypus).
+
+Muskrats case study. The temperature had a negative effect on abundance, with a slope estimated at -0.48 (-0.70, -0.26). The standard deviation of the site random effect was estimated at 1.62 (1.46, 1.79). Capture probabilities were estimated at 0.12 (0.05, 0.25) in January, 0.25 (0.15, 0.35) in February and 0.60 (0.53, 0.75) in March. Estimated abundance is in Figure \@ref(fig:muskrats) with coefficient of variation.
+
+# Discussion
+
+Simulations. In line with bat study that found little bias in removal models. "Use of the removal model with data from repeated mist-net surveys may allow resource managers and conservationists to better quantify how resource management and landscape composition affect bat species abundance and overall populations". [@Womack2019]
 
 The European Union Regulation No. 1143/2014 was established to mitigate the negative impacts of invasive alien species on biodiversity. This regulation outlines measures to prevent the introduction of invasive alien species and manage their established populations. Two species listed as species of Union Concern under the regulation, which obligates member states to implement appropriate management actions.
 
-The results of the simulation study underscored the importance of accounting for spatial autocorrelation - see Fig. \@ref(fig:bias). Ignoring spatial autocorrelation led to a relative bias of -26% in the slope of the covariate, compared to just 0.7% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330%), this outcome was expected. In spatial models, there is typically a strong positive relationship between the range parameter and the partial sill [@zhang2004; @VerHoef2024], which showed a bias of 12%. Importantly, the ratio of the range parameter to the partial sill can be reliably estimated [@zhang2004], as evidenced by its negligible bias (0.9%). Overall, the root mean square prediction error (RMSPE) was lower for the model with spatial correlation (RMSPE = 0.18) compared to the model without it (RMSPE = 0.23).
-
-Coypus case study. I provide the parameter estimates from the new model accommodating spatial autocorrelation , unless otherwise specified. Detection probability was less than one, estimated at 0.71 (0.59, 0.80), which justified the use of occupancy models. The proportion of cultivated area had no effect, with a slope estimated at 0.60 (-0.67, 1.96). Population density also had no effect on occupancy probability, with a slope estimated at -0.96 (-2.24, 0.17). However, I did find a negative effect when spatial autocorrelation was ignored, with a slope estimated at -1.10 (-1.99, -0.34). This latter result aligns with a previous analysis of a more extensive dataset [@Couturier2024] that also ignored spatial autocorrelation.
-
-Muskrats case study. - see Fig. \@ref(fig:muskrats)
-
 Two short-term perspectives arise from this work. From a methodological perspective, the new approach could be extended to multi-season occupancy models, enabling the modeling of colonization probability as a function of distance to habitat features that may impede species movement [e.g., @Kervellec2023]. This would facilitate the quantification of landscape connectivity in freshwater ecosystems. Such development requires moving to spatio-temporal models for stream and river data, which have recently become avaible [@Santos2022]. From an ecological perspective, the new approach presents significant potential for the analysis of environmental DNA (eDNA). The eDNA methodology offers substantial promise for the non-invasive monitoring of biodiversity in freshwater ecosystems [@Carraro2020]. While spatial stream network models have been employed to analyze eDNA data [@Winkowski2024], these models have overlooked the issue of imperfect detection. Previous studies have recognized occupancy models as effective tools for eDNA data analysis [@Burian2021], with some considering spatial autocorrelation [@Chen2019], however they have yet to integrate spatial stream networks. The new approach addresses this gap by incorporating both imperfect detection and spatial stream networks.
+
+Overdispersion. No more temperature effect. Coypus -0.27 (-1.30, 0.59).
 
 Recommendation. Record effort, 0s from non-sampling and 0s for non-detections. Close-kin as alternative. Use for projections. Also multispecies (cf N-mixture multispecies). Also immigration et papers par d'autres sur multinomial N-mixture extensions. Here, just AR(1) as in @Outhwaite2018 random walk, mais mechanisms et demog parameters possible. Effectifs en eux-memes un peu meaningless, boucle de gestion adaptative. 
 
-Two main assumptions: constant capture, closed pop.
+Two main assumptions: constant capture, Poisson distribution, closed pop and independence of sites. 
 
 Pb lack of fit. Main three are overdispersion, ok with negative binomial (give results); closure ok w/ open models w/ survival/recruitment or simple multisession (papier census aérien); spatial autocorrelation, ok en classique (GAM ou autre), et aussi possible w/ stream networks pour coypus; iv) Hierarchical models are well-suited for representing dependencies in space, time, or species interactions, which are common in ecological systems.
 
@@ -162,9 +185,13 @@ Pour l'ouvert, possible avec unmarked, pas ubms. OK avec NIMBLE.
 
 Pour NB, pas possible avec ubms. OK avec NIMBLE et unmarked. 
 
+MOVED FIGURES WHERE I CALL THEM.
+
+Increase in temperature, hence décrochage de la relation entre abundance et température; to test that, 1987-2014, et on régresse les yearly-specific slope sur l'année; negative trend in the slope of the effect of temp on abundance avec -0.04062367 (-0.04192120, -0.0393461).
+
 # Acknowledgments
 
-I would like to warmly thank X and Y for data. 
+I would like to warmly thank Nathalie et Tanguy for France and LIFE MICA for Netherlands. 
 
 ## Data availability statement
 
@@ -193,8 +220,24 @@ write.bibtex(file = "knitcitations.bib")
 
 \newpage
 
+```{r datsmuskrats, out.width="100%", fig.align='center', fig.pos='b', fig.cap="Data. Top removal data. Bottom temperature. DIFFICILE DE FAIRE LA DIFFERENCE AVEC LES DONNEES NON?"}
+include_graphics("dat_muskrats.png")
+```
+
+\clearpage
+
+\newpage
+
 ```{r bias, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Relative bias."}
 include_graphics("heatmap_bias.png")
+```
+
+\clearpage
+
+\newpage
+
+```{r pdcoypus, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Posterior abundance."}
+include_graphics("hist_coypus.png")
 ```
 
 \clearpage
@@ -204,3 +247,4 @@ include_graphics("heatmap_bias.png")
 ```{r muskrats, out.width="95%", fig.align='center', fig.pos='b', fig.cap="Muskrats."}
 include_graphics("muskrats.png")
 ```
+

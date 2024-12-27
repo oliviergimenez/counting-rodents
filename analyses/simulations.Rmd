@@ -30,7 +30,6 @@ theme_set(theme_light())
 Compute the relative bias (in %) in the estimator of expected abundance $E(N) = \lambda$ in a removal model with constant parameters with package `unmarked` (frequentist/mle). Relative bias is $(E(\hat \lambda) - \lambda)/\lambda$.
 
 Load packages:
-
 ```{r}
 library(unmarked)
 library(tidyverse)
@@ -39,7 +38,6 @@ library(tidyverse)
 # Function
 
 Create function to carry out simulations:
-
 ```{r}
 removal_par <- function(
     
@@ -96,7 +94,6 @@ removal_par <- function(
 # Bias calculation
 
 Initialize a table for storing results:
-
 ```{r}
 sim <- tibble(capture = double(), 
               abundance = double(),
@@ -106,7 +103,6 @@ sim <- tibble(capture = double(),
 ```
 
 Create a grids of values for the capture probability, abundance, the number of sites and the number of occasions:
-
 ```{r}
 capture <- seq(0.3, 0.9, length = 20)
 abundance <- round(seq(10, 100, length = 20))
@@ -115,13 +111,11 @@ nb_occasions <- c(3, 5, 10)
 ```
 
 Set the number of simulations to 500:
-
 ```{r}
 n_sim <- 500
 ```
 
 Compute bias:
-
 ```{r}
 for (k in nb_sites){
   for (l in nb_occasions){
@@ -144,12 +138,7 @@ for (k in nb_sites){
 }
 ```
 
-```{r}
-sim %>% View()
-```
-
 Save results:
-
 ```{r}
 saveRDS(object = sim, file = "sims/sims.rds")
 ```
@@ -157,7 +146,6 @@ saveRDS(object = sim, file = "sims/sims.rds")
 # Visualization
 
 Plot a heatmap of relative bias as a function of capture probability and abundance, for given values of the number of sites and occasions, and save the plot:
-
 ```{r}
 # Create a custom labeller function
 facet_labels <- function(variable) {
@@ -191,6 +179,7 @@ ggplot(sim, aes(x = capture, y = abundance, fill = bias)) +
   )
 ```
 
+Save plot:
 ```{r}
 ggsave(filename = "sims/heatmap_bias.png")
 ```

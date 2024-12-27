@@ -274,6 +274,42 @@ data.frame(cities = c("candillargues",
                                round(apply(res[,1:6] - matrix(apply(dat[,-c(1,2)],1,sum), nrow = nrow(res[,1:6]), ncol = 6, byrow= T), 2, quantile, probs = c(2.5, 97.5)/100))[2,], ')'))
 ```
 
+Posterior densities of abundance:
+```{r}
+Nposterior <- res[,1:6] 
+colnames(Nposterior) <- c("candillargues",
+                       "lansargues",
+                       "mauguio",
+                       "saint-nazaire-de-pézan",
+                       "saint-just",
+                       "valergues")
+Nposterior %>%
+  as_tibble() %>%
+  mutate(id = row_number()) %>%
+  pivot_longer(!id, names_to = "cities", values_to = "mcmc") %>%
+  group_by(cities) %>%
+  mutate(moy = round(mean(mcmc))) %>%
+  mutate(lower = round(quantile(mcmc, probs = c(2.5)/100))) %>%
+  mutate(upper = round(quantile(mcmc, probs = c(97.5)/100))) %>%
+  ggplot(aes(mcmc)) +
+  geom_histogram(aes(x = mcmc, y = ..density..), bins = 20, color = "black", fill = "gray") +
+  geom_vline(aes(xintercept = moy), linetype = "dashed", size = 0.6) + 
+  geom_text(
+    aes(
+      x = moy, 
+      y = 0.02, 
+      label = paste0(moy, " (", lower, ", ", upper, ")")
+    ),
+    hjust = -0.1,  # Adjust horizontal position
+    vjust = -0.5,  # Adjust vertical position
+    size = 3,      # Adjust text size
+   # angle = 90     # Rotate the text vertically
+  ) +
+  facet_wrap(vars(cities), scales = "free_x") 
+
+ggsave("hist_coypus.png", width = 10, height = 6)
+```
+
 ## Poisson distribution with `ubms`
 
 Get data ready:
@@ -298,7 +334,9 @@ Fit model:
 fit <- stan_multinomPois(~time ~scale(temp), # capture, abundance in that order
                         data = umf, 
                         chains = 2, 
-                        iter = 5000,
+                        iter = 50000*4,
+                        warmup = 5000*4,
+                        thin = 15,
                         prior_intercept_state = normal(0, 1.5),
                         prior_coef_state = normal(0, 1.5))
 ```
