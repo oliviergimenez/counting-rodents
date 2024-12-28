@@ -37,6 +37,8 @@ links-as-notes: false
 
 ---
 
+\linenumbers
+
 \small
 
 ^1^ CEFE, Univ Montpellier, CNRS, EPHE, IRD, Montpellier, France
@@ -48,7 +50,7 @@ links-as-notes: false
 \vspace{1cm}
 \hrule
 
-blabla. 
+Invasive rodents pose significant ecological, economic, and public health challenges. Robust methods are needed for estimating population abundance to guide effective management. Traditional methods such as capture-recapture are often impractical for invasive species due to ethical and logistical constraints. Here, I showcase the application of hierarchical multinomial N-mixture models for estimating the abundance of invasive rodents using removal data. First, I performed a simulation study which demonstrated minimal bias in abundance estimates across a range of sampling scenarios. Second, I analyzed removal data for two invasive rodent species: coypus (*Myocastor coypus*) in France and muskrats (*Ondatra zibethicus*) in the Netherlands. Using hierarchical multinomial N-mixture models, I examined the effects of temperature on abundance while accounting for imperfect and time-varying capture probabilities. I also showed how to accommodate spatial variability using random effects, and quantified uncertainty in parameter estimates. Overall, I hope to demonstrate the flexibility and utility of hierarchical models in invasive species management. I provide reproducible code and data to encourage broader adoption of multinomial N-mixture models.
 
 \vspace{3mm}
 \hrule
@@ -56,7 +58,6 @@ blabla.
 
 *Keywords*: Invasive species, Multinomial N-mixture, Population size, Statistical ecology
 
-\bleft
 \newpage
 
 ```{r setup, include=FALSE, cache=FALSE, message = FALSE}
@@ -96,11 +97,9 @@ Using removal data, I demonstrate the application of the multinomial N-mixture m
 
 Think of a dice with six sides. The dice has a 1 in 6 chance of landing on face 1, the same for face 2, and so on. If I roll the dice 30 times, I expect to get face 1 five times, face 2 five times, and so on, on average. In this experiment, $y_1$, the vector made of the number of 1s, $y_2$, the number of 2s, $\ldots$, and $y_6$, the number of 6s, follows a multinomial distribution with parameters the number of rolls (30) and probabilities $(1/6, 1/6, ..., 1/6)$.
 
-Now think of a removal campaign conducted over 3 months. We record the number of rodents $y_1$ captured in month 1, $y_2$ in month 2, $y_3$ in month 3, and let $y_4$ represent the number of rodents never captured. Let $p$ be the probability of capturing a rodent in a given month. The probability of capturing a rodent in the first month is $\pi_1 = p$. The probability of capturing a rodent in the second month is $\pi_2 = (1-p)p$ the probability of not capturing it in the first month $(1 - p)$ multiplied by the probability of capturing it in the second month $p$. The probability of capturing a rodent in the third month is $\pi_3 = (1-p)(1-p)p$, the probability of not capturing it in the first and second months, $(1 - p)(1 - p)$, multiplied by the probability of capturing it in the third month, $p$. Finally, the probability of never being captured is $\pi_4 = 1 - (p + (1-p)p + (1-p)(1-p)p)$ the complement of the probability of being captured in the first, second, or third month. If we assume that $N$ represents the abundance, then we have that the vector of counts $(y_1, y_2, y_3, y_4)$ follows a multinomial distribution with parameters $N$ and probabilities $(\pi_1,\pi_2,\pi_3,\pi_4)$. In general, we assume that $N$ follows a Poisson distribution with parameter the expected number of rodents denoted $\lambda$. And there you have it, the multinomial N-mixture model for a removal experiment, which is similar to throwing a dice $N$ times and the $\pi's$ give the probabilities that I get a given face of that dice. In general, we monitor rodents on several sites $i = 1,\ldots,S$ and we need to estimate local population size $N_i$ for site $i$. AJOUTER L'INTERET D'AVOIR PLUSIEURS SITES (cf ABSTRACT PAPIER DORAZIO) AND POLISH TEXT. 
+Now think of a removal campaign conducted over 3 months. We record the number of rodents $y_1$ captured in month 1, $y_2$ in month 2, $y_3$ in month 3, and let $y_4$ represent the number of rodents never captured. Let $p$ be the probability of capturing a rodent in a given month. The probability of capturing a rodent in the first month is $\pi_1 = p$. The probability of capturing a rodent in the second month is $\pi_2 = (1-p)p$ the probability of not capturing it in the first month $(1 - p)$ multiplied by the probability of capturing it in the second month $p$. The probability of capturing a rodent in the third month is $\pi_3 = (1-p)(1-p)p$, the probability of not capturing it in the first and second months, $(1 - p)(1 - p)$, multiplied by the probability of capturing it in the third month, $p$. Finally, the probability of never being captured is $\pi_4 = 1 - (p + (1-p)p + (1-p)(1-p)p)$ the complement of the probability of being captured in the first, second, or third month. If we assume that $N$ represents the abundance, then we have that the vector of counts $(y_1, y_2, y_3, y_4)$ follows a multinomial distribution with parameters $N$ and probabilities $(\pi_1,\pi_2,\pi_3,\pi_4)$. In general, we assume that $N$ follows a Poisson distribution with parameter the expected number of rodents denoted $\lambda$. And there you have it, the multinomial N-mixture model for a removal experiment, which is similar to throwing a dice $N$ times and the $\pi's$ give the probabilities that I get a given face of that dice. In general, we monitor rodents in several populations or sites $i = 1,\ldots,S$ and we need to estimate local abundance $N_i$. To do so, @Dorazio2005 extended multinomial N-mixture models to account for spatial variation in abundance and/or capture, and showed that abundance estimates had similar or better precision than those obtained from analyzing removal data for each population or site separately. 
 
 Parameters $N$, $p$, and $\lambda$ are unknown and need to be estimated. In a frequentist framework, marginalization is performed by summing over all possible values of $N$ [@Dorazio2005]. In a Bayesian framework, all these parameters are estimated directly, which simplifies the process [@RD2006]. Both parameters, $\lambda$ and $p$, can be modeled as functions of explanatory spatial and temporal variables, in the spirit of generalized linear models, and Poisson or logistic regressions for example. I warmly recommend chapter 7 in @KR2015 for a detailed description of the multinomial mixture model. 
-
-MODEL HYPOTHESES. Ici ou en discussion.
 
 <!-- The term multinomial N-mixture stands for the mixture of a multinomial observation model with respect to a Poisson model for abundance. -->
 
@@ -112,7 +111,7 @@ I conducted a simulation study to evaluate the model's performance by examining 
 
 <!-- We can express the model in terms of the conditional multinomial observation model. This method breaks the multinomial observation model up into two pieces: a multinomial conditioned on a known sample size (being the number of encountered individuals) and a binomial with the unknown sample size. -->
 
-EXPLAIN THE AIM OF EACH CASE STUDY. BIBLIO SUR EFFECT TEMPERATURE. 
+In this section, I analyzed removal data from two rodent species: coypus in France and muskrats in the Netherlands. With these case studies, I aimed at illustrating specific features of hierarchical multinomial N-mixture models. For both species, I explored the potential effect of temperature on abundance [e.g., @Gosling1981; @Simpson1993]. A comprehensive analysis of the ecological factors influencing population dynamics was beyond the scope of this work and will be addressed in future studies.
 
 ## Coypus in France
 
@@ -139,44 +138,55 @@ Valergues     & 0 & 1	& 3 & 9.4 \\
 
 ## Muskrats in the Netherlands
 
-Removal data on muskrats in the Netherlands were collected by professional trappers. The data were registered in atlas blocks (5 x 5 km) per periods of four weeks. For this study, I focus on data from 2014, specifically from sampling occasions in January, February, and March. The data were made available through the LIFE MICA project [@Cartuyvels2024] and can be freely downloaded from <https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580>. I fitted the same model as for the coypus data, except that I added a site random effect on abundance to accommodate the spatial variation that was not explained by temperature. 
+Removal data on muskrats in the Netherlands were collected by professional trappers. The data were registered in atlas blocks (5 x 5 km) per periods of four weeks. For this study, I focus on data from 2014, specifically from sampling occasions in January, February, and March. The data were made available through the LIFE MICA project [@Cartuyvels2024] and can be freely downloaded from <https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580>. The data, covering $S = 342$ cities, are presented in Figure \@ref(fig:datsmuskrats). I fitted the same model as for the coypus data, except that I added a site random effect on abundance to accommodate the spatial variation that was not explained by temperature. 
+
+```{r datsmuskrats, out.width="70%", fig.align='center', fig.pos='H', fig.cap="Data. Top removal data. Bottom temperature. DIFFICILE DE FAIRE LA DIFFERENCE AVEC LES DONNEES NON?"}
+include_graphics("dat_muskrats.png")
+```
 
 ## Implementation
 
-For all analyses, I used the statistical language `R` `r citep(citation())`. I used the `tidyverse` `r citep(citation("tidyverse"))` suite of packages for data manipulation and visualization, `sf` `r citep(citation("sf")[[1]])` for dealing with spatial data and `krigR` `r citep(citation("KrigR"))` to get temperature data. For the two case studies, I fitted models within a Bayesian framework using Markov chain Monte Carlo (MCMC) algorithms. I used both the `NIMBLE` `r citep(citation("nimble")[[1]])` and the `ubms` `r citep(citation("ubms"))` packages. The former offers high flexibility, enabling users to define custom likelihoods, though it requires manual coding, while the latter features simpler syntax with pre-built multinomial N-mixture models, albeit limited to a Poisson distribution for abundance. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and a uniform distribution for the standard deviation of the random effects. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (< 1.1), effective sample size (> 100), and visual inspection of the trace plots. 
+For all analyses, I used the statistical language `R` `r citep(citation())`. I used the `tidyverse` `r citep(citation("tidyverse"))` suite of packages for data manipulation and visualization, `sf` `r citep(citation("sf")[[1]])` for dealing with spatial data and `krigR` `r citep(citation("KrigR"))` to get temperature data. For the two case studies, I fitted models within a Bayesian framework using Markov chain Monte Carlo (MCMC) algorithms. I used both the `NIMBLE` `r citep(citation("nimble")[[1]])` and the `ubms` `r citep(citation("ubms"))` packages. The former offers high flexibility, enabling users to define custom likelihoods, though it requires manual coding, while the latter features simpler syntax with pre-built multinomial N-mixture models, albeit limited to a Poisson distribution for abundance. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and a uniform distribution for the standard deviation of the random effects. I ran two chains for a total of 200,000 iterations with a burn-in of 20,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (< 1.1), effective sample size (> 100), and visual inspection of the trace plots. 
 
 # Results and discussion
 
-The results of the simulation are presented in Figure \@ref(fig:bias). Overall, the analysis revealed minimal bias, with the exception of one site that showed a notable deviation. Increasing the number of sites to 10 significantly reduced this bias, and no bias was observed with 50 sites, supporting the recommendation by [@Dorazio2005] to analyze data jointly rather than separately. These findings align with previous simulation studies, which also reported minimal bias in removal models [e.g., @Womack2019]. To enhance reproducibility, I provide the code for the simulation study in the Supplementary Material. This resource can be adapted for various purposes, such as conducting custom simulation studies or designing removal protocols and conducting power analyses.
+The results of the simulation are presented in Figure \@ref(fig:bias). Overall, the analysis revealed minimal bias, with the exception of one site that showed a notable deviation. 
 
-In the coypus case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.14 (-0.22, -0.07). Capture probabilities were estimated at 0.43 (0.29, 0.49) in February, 0.35 (0.19, 0.44) in March and 0.84 (0.35, 1.00) in April. The posterior distributions of abundance across the different sites are presented in Figure \@ref(fig:pdcoypus). A key assumption of the multinomial N-mixture model is that abundance follows a Poisson distribution, which assumes the mean and variance are equal. However, this assumption does not appear valid based on the estimated abundance. Fortunately, this limitation can be addressed by relaxing the Poisson assumption. A straightforward approach is to use a negative binomial distribution to account for overdispersion. This adjustment can be implemented in both `NIMBLE` and `unmarked` but is not currently supported by `ubms`. I demonstrate how to fit such a model to the coypus data in the Supplementary Material. Interestingly, under the negative binomial model, the effect of temperature on abundance was no longer significant, with a slope estimate of -0.27 (-1.29, 0.60).
+```{r bias, out.width="98%", fig.align='center', fig.pos='H', fig.cap="Relative bias."}
+include_graphics("heatmap_bias.png")
+```
 
-In the muskrats case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.48 (-0.70, -0.26). The standard deviation of the site random effect was estimated at 1.62 (1.46, 1.79). Capture probabilities were estimated at 0.12 (0.05, 0.25) in January, 0.25 (0.15, 0.35) in February and 0.60 (0.53, 0.75) in March. Estimated abundance across sites is presented in Figure \@ref(fig:muskrats). An important feature of multinomial N-mixture models is their ability to quantify uncertainty, which is often overlooked in spatial analyses. Here, I provide the coefficient of variation to represent the uncertainty surrounding abundance estimates. This metric can help identify specific areas where increased sampling effort might be beneficial to improve estimate precision.
+Increasing the number of sites to 10 significantly reduced this bias, and no bias was observed with 50 sites, supporting the recommendation by [@Dorazio2005] to analyze data jointly rather than separately. These findings align with previous simulation studies, which also reported minimal bias in removal models [e.g., @Womack2019]. To enhance reproducibility, I provide the code for the simulation study in the Supplementary Material. This resource can be adapted for various purposes, such as conducting custom simulation studies or designing removal protocols and conducting power analyses.
 
+In the coypus case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.14 (-0.22, -0.07). Capture probabilities were estimated at 0.43 (0.29, 0.49) in February, 0.35 (0.19, 0.44) in March and 0.84 (0.35, 1.00) in April. The posterior distributions of abundance across the different sites are presented in Figure \@ref(fig:pdcoypus). 
 
+```{r pdcoypus, out.width="98%", fig.align='center', fig.pos='H', fig.cap="Posterior abundance."}
+include_graphics("hist_coypus.png")
+```
 
+A key assumption of the multinomial N-mixture model is that abundance follows a Poisson distribution, which assumes the mean and variance are equal. However, this assumption does not appear valid based on the estimated abundance. Fortunately, this limitation can be addressed by relaxing the Poisson assumption. A straightforward approach is to use a negative binomial distribution to account for overdispersion. This adjustment can be implemented in both `NIMBLE` and `unmarked` but is not currently supported by `ubms`. I demonstrate how to fit such a model to the coypus data in the Supplementary Material. Interestingly, under the negative binomial model, the effect of temperature on abundance was no longer significant, with a slope estimate of -0.27 (-1.29, 0.60).
+
+In the muskrats case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.48 (-0.70, -0.26). The standard deviation of the site random effect was estimated at 1.62 (1.46, 1.79). Capture probabilities were estimated at 0.12 (0.05, 0.25) in January, 0.25 (0.15, 0.35) in February and 0.60 (0.53, 0.75) in March. Estimated abundance across sites is presented in Figure \@ref(fig:muskrats). 
+
+```{r muskrats, out.width="95%", fig.align='center', fig.pos='H', fig.cap="Muskrats."}
+include_graphics("muskrats.png")
+```
+
+An important feature of multinomial N-mixture models is their ability to quantify uncertainty, which is often overlooked in spatial analyses. Here, I provide the coefficient of variation to represent the uncertainty surrounding abundance estimates. This metric can help identify specific areas where increased sampling effort might be beneficial to improve estimate precision.
 
 Another key assumption underlying the proper use of multinomial N-mixture models is that of population closure, which assumes no births, deaths, immigration, or emigration occur during the trapping period. A straightforward approach to relax this assumption is to fit multiple years of data (i.e., stacking the data) into a standard multinomial N-mixture model. In this approach, year-site combinations are treated as separate sites, and year is included as a site covariate or random effect in the model. In the muskrats example, this method can be used to evaluate a temporal effect on the relationship between temperature and abundance. Assuming an increase in temperature over time, one might hypothesize a decoupling or weakening of the relationship between abundance and temperature. To test this hypothesis, I conducted an additional analysis of the muskrat dataset spanning the 1987–2014 period, modeling the slope of the temperature-abundance relationship as a linear function of time. The results revealed a negative trend in the slope, estimated at -0.040 (-0.042, -0.039), providing evidence to support the hypothesis of a temporal weakening of this relationship. 
 
-Several perspectives arise from this work. From a methodological standpoint, this study highlights the suitability of hierarchical models for capturing dependencies in space and time, which are common in ecological systems and removal experiments in particular. Two areas stand out as particularly worth exploring.
+Several perspectives arise from this work. From a methodological standpoint, this study highlights the suitability of hierarchical models for capturing dependencies in space and time, which are common in ecological systems and removal experiments in particular. Two areas stand out as particularly worth exploring. First, I focused in this paper exclusively on static models under the assumption of population closure (see however previous section). When the mechanisms underlying population dynamics—such as survival, recruitment, or dispersal—are of interest, multinomial N-mixture models can be extended to open populations [@Matechou2016; @Zhou2019; @Link2018]. These extended models can be implemented using `unmarked` or `NIMBLE`, though they are not yet available in `ubms`. 
 
-
- I see at least two areas worth investigating. First, in this paper I considered only static models for which populations were assumed to be closed (see however the previous paragraph). First, this study focused exclusively on static models under the assumption of population closure (see the previous section for a discussion of relaxing this assumption). When the mechanisms underlying population dynamics—such as survival, recruitment, or dispersal—are of interest, multinomial N-mixture models can be extended to open populations [@Matechou2016; @Zhou2019; @Link2018]. These extended models can be implemented using `unmarked` or `NIMBLE`, though they are not yet available in `ubms`. 
- 
-Another are of investigation concerns the spatial dimension of multinomial N-mixture models that relates to the assumption of independence among removal sites, in other words les prélèvements sur un site n’affectent pas ceux faits sur un autre site. A possible solution is to consider site random effects as in the muskrat case study. To better account for spatial autocorrelation, restricted spatial regression (RSR) can also be considered [@Johnson2013; @Broms2014] - ici peux-tu expliquer les intrinsic conditional autoregressive models en une phrase? - In RSR models, the random effect is built so that it is uncorrelated with the fixed covariates (otherwise causing problems), and it can be significantly less computationally intensive. Easy to fit avec ubms, possible aussi avec NIMBLE [@Cook2022], Pas possible avec unmarked. A possible extension would be to consider stream networks particularly relevant for semi-aquatic rodents [@Lu2024; @Gimenez2024].
-
-A second area of investigation concerns the spatial dimension of multinomial N-mixture models, particularly the assumption of independence among removal sites (i.e., that removals at one site do not influence those at another). One possible solution is to include site random effects, as demonstrated in the muskrat case study. To better address spatial autocorrelation, restricted spatial regression (RSR) can also be employed [@Johnson2013; @Broms2014] tp impose a structure where spatially adjacent sites are modeled to have correlated random effects, effectively accounting for spatial autocorrelation. RSR models are advantageous because their random effects are constructed to be uncorrelated with fixed covariates, avoiding potential confounding issues, and they are computationally efficient. These models are easy to fit using `ubms`, also possible with `NIMBLE` [@Cook2022], but not currently supported by `unmarked`. A promising extension would involve adapting these models to account for stream networks, which is particularly relevant for semi-aquatic rodents [@Lu2024; @Gimenez2024]. This direction could help refine models to better reflect ecological processes in connected aquatic habitats.
+A second area of investigation concerns the spatial dimension of multinomial N-mixture models, particularly the assumption of independence among removal sites (i.e., that removals at one site do not influence those at another). One possible solution is to include site random effects, as demonstrated in the muskrat case study. To better address spatial autocorrelation, restricted spatial regression (RSR) can also be employed [@Johnson2013; @Broms2014] tp impose a structure where spatially adjacent sites are modeled to have correlated random effects, effectively accounting for spatial autocorrelation. RSR models are advantageous because their random effects are constructed to be uncorrelated with fixed covariates, avoiding potential confounding issues, and they are computationally efficient. These models are easy to fit using `ubms` and can also be implemented in `NIMBLE` [@Cook2022], although they are not currently supported by `unmarked`. A promising extension would involve adapting the covariance structure in these models to account for stream networks, which is particularly relevant for semi-aquatic rodents [@Lu2024; @Gimenez2024]. 
 
 From an ecological perspective, the main contribution of this paper is to demonstrate the estimation of abundance for rodent populations in Europe. The European Union Regulation No. 1143/2014 was established to mitigate the negative impacts of invasive alien species on biodiversity. This regulation mandates measures to prevent the introduction of invasive alien species and manage their established populations. In this study, I focused on two species listed as species of Union Concern under the regulation, which requires member states to implement appropriate management actions. 
 
-In this context, I argue that estimates of abundance alone are of limited utility, or even meaningless, if considered in isolation. While it is straightforward to calculate the number of coypus or muskrats remaining after removal campaigns (including associated uncertainty), these estimates achieve their full potential only when integrated into a decision-making framework. Such a framework enables the evaluation of the efficiency of eradication or control operations, facilitates the optimal allocation of limited resources, and incorporates uncertainty into the management of invasive species [@Shea2002; @Adams2024]. This perspective highlights the critical role of abundance estimates in supporting evidence-based decision-making and enhancing the effectiveness of management strategies.
-
-
-
+In this context, I argue that estimates of abundance alone are of limited utility for supporting evidence-based management of invasive rodents. While it is straightforward to calculate the number of coypus or muskrats remaining after removal campaigns (including associated uncertainty), these estimates achieve their full potential only when integrated into a decision-making framework. Such a framework enables the evaluation of the efficiency of eradication or control operations, facilitates the optimal allocation of limited resources, and incorporates uncertainty into the management of invasive species [@Shea2002; @Adams2024]. 
 
 # Acknowledgments
 
-I would like to warmly thank Nathalie et Tanguy for France and LIFE MICA for Netherlands. 
+I would like to warmly thank Nathalie Vazzoler-Antoine and Tanguy Lebrun for sharing the coypus data, and the team LIFE MICA for sharing the muskrats data. 
 
 ## Data availability statement
 
@@ -184,7 +194,7 @@ Data and code are available at \href{https://github.com/oliviergimenez/counting-
 
 ## Funding statement
 
-Ici mettre financement UM. 
+This work was funded by a grant from the University of Montpellier through its ExposUM institute.
 
 ## Conflict of interest disclosure
 
@@ -198,38 +208,4 @@ write.bibtex(file = "knitcitations.bib")
 
 ::: {#refs}
 :::
-
-\eleft
-
-\clearpage
-
-\newpage
-
-```{r datsmuskrats, out.width="100%", fig.align='center', fig.pos='b', fig.cap="Data. Top removal data. Bottom temperature. DIFFICILE DE FAIRE LA DIFFERENCE AVEC LES DONNEES NON?"}
-include_graphics("dat_muskrats.png")
-```
-
-\clearpage
-
-\newpage
-
-```{r bias, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Relative bias."}
-include_graphics("heatmap_bias.png")
-```
-
-\clearpage
-
-\newpage
-
-```{r pdcoypus, out.width="98%", fig.align='center', fig.pos='b', fig.cap="Posterior abundance."}
-include_graphics("hist_coypus.png")
-```
-
-\clearpage
-
-\newpage
-
-```{r muskrats, out.width="95%", fig.align='center', fig.pos='b', fig.cap="Muskrats."}
-include_graphics("muskrats.png")
-```
 
