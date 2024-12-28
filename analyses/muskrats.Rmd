@@ -44,6 +44,7 @@ library(patchwork)
 
 Read in muskrat data:
 ```{r}
+# downloadable from https://sdrive.cnrs.fr/s/b7ETJzscQQFE6tY
 muskrats <- read_delim("data/occurrence-muskrats.txt")
 head(muskrats)
 ```
