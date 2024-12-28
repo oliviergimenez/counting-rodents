@@ -146,7 +146,7 @@
 
 \title{Estimating invasive rodent abundance using removal data and hierarchical models}
 \author{Olivier Gimenez\textsuperscript{1}*}
-\date{2024-12-27}
+\date{2024-12-28}
 
 \begin{document}
 \maketitle
@@ -206,7 +206,7 @@ I conducted a simulation study to evaluate the model's performance by examining 
 
 \section{Case studies}\label{case-studies}
 
-EXPLAIN THE AIM OF EACH CASE STUDY.
+EXPLAIN THE AIM OF EACH CASE STUDY. BIBLIO SUR EFFECT TEMPERATURE.
 
 \subsection{Coypus in France}\label{coypus-in-france}
 
@@ -239,49 +239,27 @@ Removal data on muskrats in the Netherlands were collected by professional trapp
 
 For all analyses, I used the statistical language \texttt{R} (\citeproc{ref-R_Core_Team_2024}{R Core Team 2024}). I used the \texttt{tidyverse} (\citeproc{ref-Wickham_2019}{Wickham et al. 2019}) suite of packages for data manipulation and visualization, \texttt{sf} (\citeproc{ref-Pebesma_2023}{Pebesma and Bivand 2023}) for dealing with spatial data and \texttt{krigR} (\citeproc{ref-Kusch_2022}{Kusch and Davy 2022}) to get temperature data. For the two case studies, I fitted models within a Bayesian framework using Markov chain Monte Carlo (MCMC) algorithms. I used both the \texttt{NIMBLE} (\citeproc{ref-de_Valpine_2017}{de Valpine et al. 2017}) and the \texttt{ubms} (\citeproc{ref-Kellner_2021}{Kellner et al. 2021}) packages. The former offers high flexibility, enabling users to define custom likelihoods, though it requires manual coding, while the latter features simpler syntax with pre-built multinomial N-mixture models, albeit limited to a Poisson distribution for abundance. I specified weakly informative priors for all parameters, specifically normal distributions with mean 0 and standard deviation 1.5 for regression parameters, and a uniform distribution for the standard deviation of the random effects. I ran two chains for a total of 15,000 iterations with a burn-in of 5,000 iterations. I summarized posterior distributions with posterior mean and 95\% credible intervals. I assessed model convergence using R-hat values (\textless{} 1.1), effective sample size (\textgreater{} 100), and visual inspection of the trace plots.
 
-\section{Results}\label{results}
+\section{Results and discussion}\label{results-and-discussion}
 
-The results of the simulation study underscored the importance of accounting for spatial autocorrelation - see Figure \ref{fig:bias}. Ignoring spatial autocorrelation led to a relative bias of -26\% in the slope of the covariate, compared to just 0.7\% when spatial autocorrelation was included. Although the range parameter exhibited substantial bias (330\%), this outcome was expected.
+The results of the simulation are presented in Figure \ref{fig:bias}. Overall, the analysis revealed minimal bias, with the exception of one site that showed a notable deviation. Increasing the number of sites to 10 significantly reduced this bias, and no bias was observed with 50 sites, supporting the recommendation by (\citeproc{ref-Dorazio2005}{Dorazio et al. 2005}) to analyze data jointly rather than separately. These findings align with previous simulation studies, which also reported minimal bias in removal models (e.g., \citeproc{ref-Womack2019}{Womack-Bulliner et al. 2019}). To enhance reproducibility, I provide the code for the simulation study in the Supplementary Material. This resource can be adapted for various purposes, such as conducting custom simulation studies or designing removal protocols and conducting power analyses.
 
-Coypus case study. The temperature had a negative effect on abundance, with a slope estimated at -0.14 (-0.22, -0.07). Capture probabilities were estimated at 0.43 (0.29, 0.49) in February, 0.35 (0.19, 0.44) in March and 0.84 (0.35, 1.00) in April. Posterior distributions of abundance are in Figure \ref{fig:pdcoypus}.
+In the coypus case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.14 (-0.22, -0.07). Capture probabilities were estimated at 0.43 (0.29, 0.49) in February, 0.35 (0.19, 0.44) in March and 0.84 (0.35, 1.00) in April. The posterior distributions of abundance across the different sites are presented in Figure \ref{fig:pdcoypus}. A key assumption of the multinomial N-mixture model is that abundance follows a Poisson distribution, which assumes the mean and variance are equal. However, this assumption does not appear valid based on the estimated abundance. Fortunately, this limitation can be addressed by relaxing the Poisson assumption. A straightforward approach is to use a negative binomial distribution to account for overdispersion. This adjustment can be implemented in both \texttt{NIMBLE} and \texttt{unmarked} but is not currently supported by \texttt{ubms}. I demonstrate how to fit such a model to the coypus data in the Supplementary Material. Interestingly, under the negative binomial model, the effect of temperature on abundance was no longer significant, with a slope estimate of -0.27 (-1.29, 0.60).
 
-Muskrats case study. The temperature had a negative effect on abundance, with a slope estimated at -0.48 (-0.70, -0.26). The standard deviation of the site random effect was estimated at 1.62 (1.46, 1.79). Capture probabilities were estimated at 0.12 (0.05, 0.25) in January, 0.25 (0.15, 0.35) in February and 0.60 (0.53, 0.75) in March. Estimated abundance is in Figure \ref{fig:muskrats} with coefficient of variation.
+In the muskrats case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.48 (-0.70, -0.26). The standard deviation of the site random effect was estimated at 1.62 (1.46, 1.79). Capture probabilities were estimated at 0.12 (0.05, 0.25) in January, 0.25 (0.15, 0.35) in February and 0.60 (0.53, 0.75) in March. Estimated abundance across sites is presented in Figure \ref{fig:muskrats}. An important feature of multinomial N-mixture models is their ability to quantify uncertainty, which is often overlooked in spatial analyses. Here, I provide the coefficient of variation to represent the uncertainty surrounding abundance estimates. This metric can help identify specific areas where increased sampling effort might be beneficial to improve estimate precision.
 
-\section{Discussion}\label{discussion}
+Another key assumption underlying the proper use of multinomial N-mixture models is that of population closure, which assumes no births, deaths, immigration, or emigration occur during the trapping period. A straightforward approach to relax this assumption is to fit multiple years of data (i.e., stacking the data) into a standard multinomial N-mixture model. In this approach, year-site combinations are treated as separate sites, and year is included as a site covariate or random effect in the model. In the muskrats example, this method can be used to evaluate a temporal effect on the relationship between temperature and abundance. Assuming an increase in temperature over time, one might hypothesize a decoupling or weakening of the relationship between abundance and temperature. To test this hypothesis, I conducted an additional analysis of the muskrat dataset spanning the 1987--2014 period, modeling the slope of the temperature-abundance relationship as a linear function of time. The results revealed a negative trend in the slope, estimated at -0.040 (-0.042, -0.039), providing evidence to support the hypothesis of a temporal weakening of this relationship.
 
-Simulations. In line with bat study that found little bias in removal models. ``Use of the removal model with data from repeated mist-net surveys may allow resource managers and conservationists to better quantify how resource management and landscape composition affect bat species abundance and overall populations''. (\citeproc{ref-Womack2019}{Womack-Bulliner et al. 2019})
+Several perspectives arise from this work. From a methodological standpoint, this study highlights the suitability of hierarchical models for capturing dependencies in space and time, which are common in ecological systems and removal experiments in particular. Two areas stand out as particularly worth exploring.
 
-The European Union Regulation No.~1143/2014 was established to mitigate the negative impacts of invasive alien species on biodiversity. This regulation outlines measures to prevent the introduction of invasive alien species and manage their established populations. Two species listed as species of Union Concern under the regulation, which obligates member states to implement appropriate management actions.
+I see at least two areas worth investigating. First, in this paper I considered only static models for which populations were assumed to be closed (see however the previous paragraph). First, this study focused exclusively on static models under the assumption of population closure (see the previous section for a discussion of relaxing this assumption). When the mechanisms underlying population dynamics---such as survival, recruitment, or dispersal---are of interest, multinomial N-mixture models can be extended to open populations (\citeproc{ref-Matechou2016}{Matechou et al. 2016}, \citeproc{ref-Link2018}{Link et al. 2018}, \citeproc{ref-Zhou2019}{Zhou et al. 2019}). These extended models can be implemented using \texttt{unmarked} or \texttt{NIMBLE}, though they are not yet available in \texttt{ubms}.
 
-Two short-term perspectives arise from this work. From a methodological perspective, the new approach could be extended to multi-season occupancy models, enabling the modeling of colonization probability as a function of distance to habitat features that may impede species movement (e.g., \citeproc{ref-Kervellec2023}{Kervellec et al. 2024}). This would facilitate the quantification of landscape connectivity in freshwater ecosystems. Such development requires moving to spatio-temporal models for stream and river data, which have recently become avaible (\citeproc{ref-Santos2022}{Santos-Fernandez et al. 2022}). From an ecological perspective, the new approach presents significant potential for the analysis of environmental DNA (eDNA). The eDNA methodology offers substantial promise for the non-invasive monitoring of biodiversity in freshwater ecosystems (\citeproc{ref-Carraro2020}{Carraro et al. 2020}). While spatial stream network models have been employed to analyze eDNA data (\citeproc{ref-Winkowski2024}{Winkowski et al. 2024}), these models have overlooked the issue of imperfect detection. Previous studies have recognized occupancy models as effective tools for eDNA data analysis (\citeproc{ref-Burian2021}{Burian et al. 2021}), with some considering spatial autocorrelation (\citeproc{ref-Chen2019}{Chen and Ficetola 2019}), however they have yet to integrate spatial stream networks. The new approach addresses this gap by incorporating both imperfect detection and spatial stream networks.
+Another are of investigation concerns the spatial dimension of multinomial N-mixture models that relates to the assumption of independence among removal sites, in other words les prélèvements sur un site n'affectent pas ceux faits sur un autre site. A possible solution is to consider site random effects as in the muskrat case study. To better account for spatial autocorrelation, restricted spatial regression (RSR) can also be considered (\citeproc{ref-Johnson2013}{Johnson et al. 2013}, \citeproc{ref-Broms2014}{Broms et al. 2014}) - ici peux-tu expliquer les intrinsic conditional autoregressive models en une phrase? - In RSR models, the random effect is built so that it is uncorrelated with the fixed covariates (otherwise causing problems), and it can be significantly less computationally intensive. Easy to fit avec ubms, possible aussi avec NIMBLE (\citeproc{ref-Cook2022}{Cook et al. 2022}), Pas possible avec unmarked. A possible extension would be to consider stream networks particularly relevant for semi-aquatic rodents (\citeproc{ref-Gimenez2024}{Gimenez 2024}, \citeproc{ref-Lu2024}{Lu et al. 2024}).
 
-Overdispersion. No more temperature effect. Coypus -0.27 (-1.30, 0.59).
+A second area of investigation concerns the spatial dimension of multinomial N-mixture models, particularly the assumption of independence among removal sites (i.e., that removals at one site do not influence those at another). One possible solution is to include site random effects, as demonstrated in the muskrat case study. To better address spatial autocorrelation, restricted spatial regression (RSR) can also be employed (\citeproc{ref-Johnson2013}{Johnson et al. 2013}, \citeproc{ref-Broms2014}{Broms et al. 2014}) tp impose a structure where spatially adjacent sites are modeled to have correlated random effects, effectively accounting for spatial autocorrelation. RSR models are advantageous because their random effects are constructed to be uncorrelated with fixed covariates, avoiding potential confounding issues, and they are computationally efficient. These models are easy to fit using \texttt{ubms}, also possible with \texttt{NIMBLE} (\citeproc{ref-Cook2022}{Cook et al. 2022}), but not currently supported by \texttt{unmarked}. A promising extension would involve adapting these models to account for stream networks, which is particularly relevant for semi-aquatic rodents (\citeproc{ref-Gimenez2024}{Gimenez 2024}, \citeproc{ref-Lu2024}{Lu et al. 2024}). This direction could help refine models to better reflect ecological processes in connected aquatic habitats.
 
-Recommendation. Record effort, 0s from non-sampling and 0s for non-detections. Close-kin as alternative. Use for projections. Also multispecies (cf N-mixture multispecies). Also immigration et papers par d'autres sur multinomial N-mixture extensions. Here, just AR(1) as in Outhwaite et al. (\citeproc{ref-Outhwaite2018}{2018}) random walk, mais mechanisms et demog parameters possible. Effectifs en eux-memes un peu meaningless, boucle de gestion adaptative.
+From an ecological perspective, the main contribution of this paper is to demonstrate the estimation of abundance for rodent populations in Europe. The European Union Regulation No.~1143/2014 was established to mitigate the negative impacts of invasive alien species on biodiversity. This regulation mandates measures to prevent the introduction of invasive alien species and manage their established populations. In this study, I focused on two species listed as species of Union Concern under the regulation, which requires member states to implement appropriate management actions.
 
-Two main assumptions: constant capture, Poisson distribution, closed pop and independence of sites.
-
-Pb lack of fit. Main three are overdispersion, ok with negative binomial (give results); closure ok w/ open models w/ survival/recruitment or simple multisession (papier census aérien); spatial autocorrelation, ok en classique (GAM ou autre), et aussi possible w/ stream networks pour coypus; iv) Hierarchical models are well-suited for representing dependencies in space, time, or species interactions, which are common in ecological systems.
-
-Pour ouvert, papier Eleni open (mais permanent emigration) (\citeproc{ref-Matechou2016}{Matechou et al. 2016}), puis Zhou pour temporary emigration (\citeproc{ref-Zhou2019}{Zhou et al. 2019}). Ajouter aussi le papier de Link pour dispersal (\citeproc{ref-Link2018}{Link et al. 2018}).
-
-Un peu chiant unmarked. Avantage bayésien. No boundary estimates, easy random effects.
-
-Difference entre population et species.
-
-Les hypothèses du modèle. Ici ou en discussion. Population fermée: pas de naissances/morts ou émigration/immigration pendant la période de piégeage. Les sites de piégeage sont indépendants: les prélèvements sur un site n'affectent pas ceux faits sur un autre site.
-
-Lack of fit, overdispersion and negative binomial.
-
-Si random effect site pas pertinent, on peut faire du spatial autocorrelation avec RSR. Easy avec ubms, possible aussi avec NIMBLE (\url{https://wildlife.onlinelibrary.wiley.com/doi/10.1002/jwmg.22296}). Pas possible avec unmarked.
-
-Pour l'ouvert, possible avec unmarked, pas ubms. OK avec NIMBLE.
-
-Pour NB, pas possible avec ubms. OK avec NIMBLE et unmarked.
-
-MOVED FIGURES WHERE I CALL THEM.
-
-Increase in temperature, hence décrochage de la relation entre abundance et température; to test that, 1987-2014, et on régresse les yearly-specific slope sur l'année; negative trend in the slope of the effect of temp on abundance avec -0.04062367 (-0.04192120, -0.0393461).
+In this context, I argue that estimates of abundance alone are of limited utility, or even meaningless, if considered in isolation. While it is straightforward to calculate the number of coypus or muskrats remaining after removal campaigns (including associated uncertainty), these estimates achieve their full potential only when integrated into a decision-making framework. Such a framework enables the evaluation of the efficiency of eradication or control operations, facilitates the optimal allocation of limited resources, and incorporates uncertainty into the management of invasive species (\citeproc{ref-Shea2002}{Shea et al. 2002}, \citeproc{ref-Adams2024}{Yackel Adams et al. 2024}). This perspective highlights the critical role of abundance estimates in supporting evidence-based decision-making and enhancing the effectiveness of management strategies.
 
 \section{Acknowledgments}\label{acknowledgments}
 
@@ -309,17 +287,14 @@ Bonnet, M., G. Guédon, S. Bertolino, C. Harmange, A. Pagano, D. Picard, and O. 
 \bibitem[\citeproctext]{ref-Borchers2002}
 Borchers, D. L., S. T. Buckland, and Z. W. 2002. Estimating animal abundance: Closed populations. Springer-Verlag, London.
 
-\bibitem[\citeproctext]{ref-Burian2021}
-Burian, A., Q. Mauvisseau, M. Bulling, S. Domisch, S. Qian, and M. Sweet. 2021. Improving the reliability of eDNA data interpretation. Molecular Ecology Resources 21:1422--1433.
-
-\bibitem[\citeproctext]{ref-Carraro2020}
-Carraro, L., E. Mächler, R. Wüthrich, and F. Altermatt. 2020. Environmental DNA allows upscaling spatial patterns of biodiversity in freshwater ecosystems. Nature Communications 11:3585.
+\bibitem[\citeproctext]{ref-Broms2014}
+Broms, K. M., D. S. Johnson, R. Altwegg, and L. L. Conquest. 2014. Spatial occupancy models applied to atlas data show southern ground hornbills strongly depend on protected areas. Ecological Applications 24:363--374.
 
 \bibitem[\citeproctext]{ref-Cartuyvels2024}
 Cartuyvels, E., F. Huysentruyt, D. Brosens, P. Desmet, S. Devisscher, H. Fritz, L. Fromme, F. Gethöffer, C. Maistrelli, D. Moerkens, N. Noé, D. Slootmaekers, and T. Adriaens. 2024. Dataflows in support of cross-border management of muskrat (ondatra zibethicus) and coypu (myocastor coypus): The LIFE MICA approach. Management of Biological Invasions 15:455--470.
 
-\bibitem[\citeproctext]{ref-Chen2019}
-Chen, W., and G. F. Ficetola. 2019. Conditionally autoregressive models improve occupancy analyses of autocorrelated data: An example with environmental DNA. Molecular Ecology Resources 19:163--175.
+\bibitem[\citeproctext]{ref-Cook2022}
+Cook, J. D., D. M. Williams, W. F. Porter, and S. A. Christensen. 2022. Improved predictions and forecasts of chronic wasting disease occurrence using multiple mechanism dynamic occupancy modeling. The Journal of Wildlife Management 86:e22296.
 
 \bibitem[\citeproctext]{ref-de_Valpine_2017}
 de Valpine, P., D. Turek, C. Paciorek, C. Anderson-Bergman, D. Temple Lang, and R. Bodik. 2017. \href{https://doi.org/10.1080/10618600.2016.1172487}{Programming with models: Writing statistical algorithms for general model structures with {NIMBLE}}. Journal of Computational and Graphical Statistics 26:403--413.
@@ -330,14 +305,17 @@ Diagne, C., L. Ballesteros-Mejia, R. Cuthbert, T. Bodey, J. Fantle-Lepczyk, E. A
 \bibitem[\citeproctext]{ref-Dorazio2005}
 Dorazio, R. M., H. L. Jelks, and F. Jordan. 2005. Improving removal-based estimates of abundance by sampling a population of spatially distinct subpopulations. Biometrics 61:1093--1101.
 
+\bibitem[\citeproctext]{ref-Gimenez2024}
+Gimenez, O. 2024. Spatial occupancy models for data collected on stream networks. Aquatic Conservation: Marine and Freshwater Ecosystems 34:e70013.
+
+\bibitem[\citeproctext]{ref-Johnson2013}
+Johnson, D. S., P. B. Conn, M. B. Hooten, J. C. Ray, and B. A. Pond. 2013. Spatial occupancy models for large data sets. Ecology 94:801--808.
+
 \bibitem[\citeproctext]{ref-Kellner_2021}
 Kellner, K. F., N. L. Fowler, T. R. Petroelje, T. M. Kautz, D. E. Beyer, and J. L. Belant. 2021. \href{https://doi.org/10.1111/2041-210X.13777}{{ubms}: An {R} package for fitting hierarchical occupancy and n-mixture abundance models in a bayesian framework}. Methods in Ecology and Evolution 13:577--584.
 
 \bibitem[\citeproctext]{ref-Kellner_2023}
 Kellner, K. F., A. D. Smith, J. A. Royle, M. Kery, J. L. Belant, and R. B. Chandler. 2023. \href{https://www.jstatsoft.org/v43/i10/}{The {unmarked} {R} package: Twelve years of advances in occurrence and abundance modelling in ecology}. Methods in Ecology and Evolution 14:1408--1415.
-
-\bibitem[\citeproctext]{ref-Kervellec2023}
-Kervellec, M., T. Couturier, S. Bauduin, D. Chenesseau, P. D. du Rau, N. Drouet-Hoguet, C. Duchamp, J. Steinmetz, J.-M. Vandel, and O. Gimenez. 2024. Bringing circuit theory into spatial occupancy models to assess landscape connectivity. Methods in Ecology and Evolution.
 
 \bibitem[\citeproctext]{ref-KR2015}
 Kéry, M., and J. A. Royle. 2015. Applied hierarchical modeling in ecology: Analysis of distribution, abundance and species richness in r and BUGS. Academic Press, London, UK.
@@ -354,6 +332,9 @@ Link, W. A., S. J. Converse, A. A. Yackel Adams, and N. J. Hostetter. 2018. Anal
 \bibitem[\citeproctext]{ref-vanloon2017}
 Loon, E. E. van, D. Bos, C. J. van Hellenberg Hubar, and R. C. Ydenberg. 2017. A historical perspective on the effects of trapping and controlling the muskrat (ondatra zibethicus) in the netherlands. Pest Management Science 73:305--312.
 
+\bibitem[\citeproctext]{ref-Lu2024}
+Lu, X., Y. Kanno, G. P. Valentine, J. M. Rash, and M. B. Hooten. 2024. Using multi-scale spatial models of dendritic ecosystems to infer abundance of a stream salmonid. Journal of Applied Ecology 61:1703--1715.
+
 \bibitem[\citeproctext]{ref-Matechou2016}
 Matechou, E., R. S. McCrea, B. J. T. Morgan, D. J. Nash, and R. A. Griffiths. 2016. {Open models for removal data}. The Annals of Applied Statistics 10:1572--1589.
 
@@ -362,9 +343,6 @@ McCrea, R. S., and B. J. T. Morgan. 2015. Analysis of capture-recapture data. Ch
 
 \bibitem[\citeproctext]{ref-Moran1951}
 Moran, P. A. P. 1951. A mathematical theory of animal trapping. Biometrika 38:307--311.
-
-\bibitem[\citeproctext]{ref-Outhwaite2018}
-Outhwaite, C. L., R. E. Chandler, G. D. Powney, B. Collen, R. D. Gregory, and N. J. B. Isaac. 2018. Prior specification in bayesian occupancy modelling improves analysis of species occurrence data. Ecological Indicators 93:333--343.
 
 \bibitem[\citeproctext]{ref-Pebesma_2023}
 Pebesma, E., and R. Bivand. 2023. \href{https://doi.org/10.1201/9780429459016}{{Spatial Data Science: With applications in R}}. {Chapman and Hall/CRC}.
@@ -387,11 +365,11 @@ Royle, J. A., and R. M. Dorazio. 2008. Hierarchical modeling and inference in ec
 \bibitem[\citeproctext]{ref-RD2006}
 Royle, J. andrew, and R. Dorazio. 2006. Hierarchical models of animal abundance and occurrence. Journal of Agricultural, Biological, and Environmental Statistics 11:249--263.
 
-\bibitem[\citeproctext]{ref-Santos2022}
-Santos-Fernandez, E., J. M. Ver Hoef, E. E. Peterson, J. McGree, D. J. Isaak, and K. Mengersen. 2022. Bayesian spatio-temporal models for stream networks. Computational Statistics \& Data Analysis 170:107446.
-
 \bibitem[\citeproctext]{ref-Seber2023}
 Seber, G. A. F., and M. R. Schofield. 2023. Estimating presence and abundance of closed populations. Springer.
+
+\bibitem[\citeproctext]{ref-Shea2002}
+Shea, K., H. P. Possingham, W. W. Murdoch, and R. Roush. 2002. Active adaptive management in insect pest and weed control: Intervention with a plan for learning. Ecological Applications 12:927--936.
 
 \bibitem[\citeproctext]{ref-Thompson2021}
 Thompson, B. K., J. D. Olden, and S. J. Converse. 2021. Mechanistic invasive species management models and their application in conservation. Conservation Science and Practice 3:e533.
@@ -402,11 +380,11 @@ Wickham, H., M. Averick, J. Bryan, W. Chang, L. D. McGowan, R. François, G. Gro
 \bibitem[\citeproctext]{ref-Williams2002}
 Williams, B. K., J. D. Nichols, and M. J. Conroy. 2002. Analysis and management of animal populations. Academic Press, San Diego, California, USA.
 
-\bibitem[\citeproctext]{ref-Winkowski2024}
-Winkowski, J. J., J. D. Olden, and S. Brown. 2024. Integrating spatial stream network models and environmental DNA to estimate current and future distributions of nonnative smallmouth bass. Transactions of the American Fisheries Society 153:180--199.
-
 \bibitem[\citeproctext]{ref-Womack2019}
 Womack-Bulliner, K. M., S. K. Amelon, F. R. Thompson, and J. J. Lebrun. 2019. {Performance of Hierarchical Abundance Models on Simulated Bat Capture Data}. Acta Chiropterologica 20:465--474.
+
+\bibitem[\citeproctext]{ref-Adams2024}
+Yackel Adams, A. A., N. J. Hostetter, W. A. Link, and S. J. Converse. 2024. Identifying pareto-efficient eradication strategies for invasive populations. Conservation Letters 17:e13051.
 
 \bibitem[\citeproctext]{ref-Zhou2019}
 Zhou, M., R. S. McCrea, E. Matechou, D. J. Cole, and R. A. Griffiths. 2019. Removal models accounting for temporary emigration. Biometrics 75:24--35.

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.7.22)  27 DEC 2024 16:29
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.7.22)  28 DEC 2024 09:58
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -545,52 +545,52 @@ LaTeX Font Info:    Font shape `U/msb/m/n' will be
 (Font)              scaled to size 11.40997pt on input line 195.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
 (Font)              scaled to size 8.33606pt on input line 195.
-[4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15]
-<dat_muskrats.png, id=217, 433.62pt x 722.7pt>
+[4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16]
+<dat_muskrats.png, id=219, 433.62pt x 722.7pt>
 File: dat_muskrats.png Graphic file (type png)
 <use dat_muskrats.png>
-Package pdftex.def Info: dat_muskrats.png  used on input line 430.
+Package pdftex.def Info: dat_muskrats.png  used on input line 408.
 (pdftex.def)             Requested size: 420.30653pt x 700.5109pt.
 
-LaTeX Warning: Float too large for page by 37.43942pt on input line 435.
+LaTeX Warning: Float too large for page by 37.43942pt on input line 413.
 
-[16 <./dat_muskrats.png>]
-<heatmap_bias.png, id=223, 505.89pt x 505.89pt>
+[17 <./dat_muskrats.png>]
+<heatmap_bias.png, id=225, 505.89pt x 505.89pt>
 File: heatmap_bias.png Graphic file (type png)
 <use heatmap_bias.png>
-Package pdftex.def Info: heatmap_bias.png  used on input line 443.
+Package pdftex.def Info: heatmap_bias.png  used on input line 421.
 (pdftex.def)             Requested size: 443.91861pt x 443.91861pt.
-[17 <./heatmap_bias.png>]
-<hist_coypus.png, id=230, 722.7pt x 433.62pt>
+[18 <./heatmap_bias.png>]
+<hist_coypus.png, id=232, 722.7pt x 433.62pt>
 File: hist_coypus.png Graphic file (type png)
 <use hist_coypus.png>
-Package pdftex.def Info: hist_coypus.png  used on input line 456.
+Package pdftex.def Info: hist_coypus.png  used on input line 434.
 (pdftex.def)             Requested size: 443.912pt x 266.3472pt.
-[18 <./hist_coypus.png>]
-<muskrats.png, id=235, 1230.5975pt x 1750.54pt>
+[19 <./hist_coypus.png>]
+<muskrats.png, id=238, 1230.5975pt x 1750.54pt>
 File: muskrats.png Graphic file (type png)
 <use muskrats.png>
-Package pdftex.def Info: muskrats.png  used on input line 469.
+Package pdftex.def Info: muskrats.png  used on input line 447.
 (pdftex.def)             Requested size: 430.30247pt x 612.11053pt.
-[19 <./muskrats.png>] (./rodent-abundance-from-removal.aux)
+[20 <./muskrats.png>] (./rodent-abundance-from-removal.aux)
  ***********
 LaTeX2e <2023-11-01>
 L3 programming layer <2023-12-11>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 14556 strings out of 476141
- 230870 string characters out of 5793752
- 1938457 words of memory out of 5000000
- 36102 multiletter control sequences out of 15000+600000
- 608468 words of font info for 242 fonts, out of 8000000 for 9000
+ 14551 strings out of 476141
+ 230807 string characters out of 5793752
+ 1937457 words of memory out of 5000000
+ 36100 multiletter control sequences out of 15000+600000
+ 608309 words of font info for 240 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 77i,10n,81p,1855b,680s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 77i,10n,81p,1855b,682s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </Users/oliviergimenez/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1095.600pk> </Users/oliviergimenez/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600pk> </Users/oliviergimenez/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecss0800.450pk></Users/oliviergimenez/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></Users/oliviergimenez/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></Users/oliviergimenez/Library/TinyTeX/texmf-dist/fonts/type1/public/mathpazo/fplmri.pfb></Users/oliviergimenez/Library/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></Users/oliviergimenez/Library/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></Users/oliviergimenez/Library/TinyTeX/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on rodent-abundance-from-removal.pdf (19 pages, 1478729 bytes).
+Output written on rodent-abundance-from-removal.pdf (20 pages, 1480845 bytes).
 PDF statistics:
- 385 PDF objects out of 1000 (max. 8388607)
- 303 compressed objects within 4 object streams
+ 384 PDF objects out of 1000 (max. 8388607)
+ 301 compressed objects within 4 object streams
  79 named destinations out of 1000 (max. 500000)
- 65677 words of extra memory for PDF output out of 74296 (max. 10000000)
+ 65669 words of extra memory for PDF output out of 74296 (max. 10000000)
 
