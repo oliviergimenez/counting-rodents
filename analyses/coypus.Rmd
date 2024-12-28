@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE, 
                       message = FALSE, 
                       warning = FALSE, 
-                      dpi = 600, 
+                      dpi = 150, 
                       fig.height=6, 
                       fig.width = 1.777777*6)
 library(tidyverse)
