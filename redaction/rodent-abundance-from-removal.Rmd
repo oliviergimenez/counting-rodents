@@ -103,7 +103,7 @@ Parameters $N$, $p$, and $\lambda$ are unknown and need to be estimated. In a fr
 
 <!-- The term multinomial N-mixture stands for the mixture of a multinomial observation model with respect to a Poisson model for abundance. -->
 
-# Simulations
+# Simulation study
 
 I conducted a simulation study to evaluate the model's performance by examining parameter bias under varying numbers of sampling sites and sampling occasions. I simulated removal data over 1, 5, 10 and 50 sites using a Poisson distribution with expected number of animals $\lambda$ between 10 and 100 (20 values) for the ecological process. I simulated the observation process with a capture probability $p$ varying between 0.3 and 0.9 (20 values) across 3, 5 and 10 occasions per site. In total, I considered 4800 scenarios. I fitted the multinomial N-mixture model to the simulated data within the frequentist framework using function `multinomPois()` in the `R` package `unmarked` `r citep(citation("unmarked")[[1]])`, and I repeated this procedure 500 times. Eventually, I calculated the relative bias for each parameter.
 
@@ -132,7 +132,7 @@ Saint-Just    & 85	& 61	& 77 & 9.2 \\
 Valergues     & 0 & 1	& 3 & 9.4 \\
 \hline
 \end{tabular}
-\caption{Number of invasive coypus removed monthly, and averaged 3-month temperature in several cities of the Hérault department for the year 2022.}
+\caption{Number of invasive coypus removed monthly and the average 3-month temperature across several cities in the Hérault department, France, in 2022.}
 \label{tab:coypus}
 \end{table}
 
@@ -140,7 +140,7 @@ Valergues     & 0 & 1	& 3 & 9.4 \\
 
 Removal data on muskrats in the Netherlands were collected by professional trappers. The data were registered in atlas blocks (5 x 5 km) per periods of four weeks. For this study, I focus on data from 2014, specifically from sampling occasions in January, February, and March. The data were made available through the LIFE MICA project [@Cartuyvels2024] and can be freely downloaded from <https://www.gbif.org/dataset/7d75109d-a6cb-4e90-89d0-79d08577c580>. The data, covering $S = 342$ cities, are presented in Figure \@ref(fig:datsmuskrats). I fitted the same model as for the coypus data, except that I added a site random effect on abundance to accommodate the spatial variation that was not explained by temperature. 
 
-```{r datsmuskrats, out.width="70%", fig.align='center', fig.pos='H', fig.cap="Data. Top removal data. Bottom temperature. DIFFICILE DE FAIRE LA DIFFERENCE AVEC LES DONNEES NON?"}
+```{r datsmuskrats, out.width="70%", fig.align='center', fig.pos='H', fig.cap="Total number of invasive muskrats removed in January, February and March (top panel), and the average 3-month temperature (bottom panel) across the Netherlands in 2014."}
 include_graphics("dat_muskrats.png")
 ```
 
@@ -152,7 +152,7 @@ For all analyses, I used the statistical language `R` `r citep(citation())`. I u
 
 The results of the simulation are presented in Figure \@ref(fig:bias). Overall, the analysis revealed minimal bias, with the exception of one site that showed a notable deviation. 
 
-```{r bias, out.width="98%", fig.align='center', fig.pos='H', fig.cap="Relative bias."}
+```{r bias, out.width="98%", fig.align='center', fig.pos='H', fig.cap="Relative bias in abundance estimates from a multinomial N-mixture model with constant parameters. Capture probabilities (X-axis) range from 0.3 to 0.9, while abundance (Y-axis) varies between 10 and 100 individuals. Scenarios consider 3, 5, and 10 capture occasions (columns) and 1, 5, 10, and 50 sites (rows). Results are based on 500 simulations."}
 include_graphics("heatmap_bias.png")
 ```
 
@@ -160,17 +160,19 @@ Increasing the number of sites to 10 significantly reduced this bias, and no bia
 
 In the coypus case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.14 (-0.22, -0.07). Capture probabilities were estimated at 0.43 (0.29, 0.49) in February, 0.35 (0.19, 0.44) in March and 0.84 (0.35, 1.00) in April. The posterior distributions of abundance across the different sites are presented in Figure \@ref(fig:pdcoypus). 
 
-```{r pdcoypus, out.width="98%", fig.align='center', fig.pos='H', fig.cap="Posterior abundance."}
+```{r pdcoypus, out.width="98%", fig.align='center', fig.pos='H', fig.cap="Posterior density plots for coypu abundance across several cities in the Hérault department, France, in 2022. The vertical shaded line indicates the posterior mean abundance, accompanied by its credible interval. See Table 1 for the raw data."}
 include_graphics("hist_coypus.png")
 ```
+
 
 A key assumption of the multinomial N-mixture model is that abundance follows a Poisson distribution, which assumes the mean and variance are equal. However, this assumption does not appear valid based on the estimated abundance. Fortunately, this limitation can be addressed by relaxing the Poisson assumption. A straightforward approach is to use a negative binomial distribution to account for overdispersion. This adjustment can be implemented in both `NIMBLE` and `unmarked` but is not currently supported by `ubms`. I demonstrate how to fit such a model to the coypus data in the Supplementary Material. Interestingly, under the negative binomial model, the effect of temperature on abundance was no longer significant, with a slope estimate of -0.27 (-1.29, 0.60).
 
 In the muskrats case study, temperature was found to have a negative effect on abundance, with a slope estimate of -0.48 (-0.70, -0.26). The standard deviation of the site random effect was estimated at 1.62 (1.46, 1.79). Capture probabilities were estimated at 0.12 (0.05, 0.25) in January, 0.25 (0.15, 0.35) in February and 0.60 (0.53, 0.75) in March. Estimated abundance across sites is presented in Figure \@ref(fig:muskrats). 
 
-```{r muskrats, out.width="95%", fig.align='center', fig.pos='H', fig.cap="Muskrats."}
+```{r muskrats, out.width="95%", fig.align='center', fig.pos='H', fig.cap="Posterior mean estimates of muskrat abundance in the Netherlands in 2022 (top panel) and the corresponding coefficient of variation (bottom panel). See Figure 1 for the raw data."}
 include_graphics("muskrats.png")
 ```
+
 
 An important feature of multinomial N-mixture models is their ability to quantify uncertainty, which is often overlooked in spatial analyses. Here, I provide the coefficient of variation to represent the uncertainty surrounding abundance estimates. This metric can help identify specific areas where increased sampling effort might be beneficial to improve estimate precision.
 
@@ -186,19 +188,11 @@ In this context, I argue that estimates of abundance alone are of limited utilit
 
 # Acknowledgments
 
-I would like to warmly thank Nathalie Vazzoler-Antoine and Tanguy Lebrun for sharing the coypus data, and the team LIFE MICA for sharing the muskrats data. 
+I would like to warmly thank Nathalie Vazzoler-Antoine and Tanguy Lebrun for sharing the coypus data, and the team LIFE MICA for sharing the muskrats data. This work was funded by a grant from the University of Montpellier through its ExposUM institute.
 
 ## Data availability statement
 
 Data and code are available at \href{https://github.com/oliviergimenez/counting-rodents}{https://github.com/oliviergimenez/counting-rodents}.
-
-## Funding statement
-
-This work was funded by a grant from the University of Montpellier through its ExposUM institute.
-
-## Conflict of interest disclosure
-
-The author has no conflicts of interest to declare.
 
 # References
 

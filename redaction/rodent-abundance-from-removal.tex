@@ -200,7 +200,7 @@ Now think of a removal campaign conducted over 3 months. We record the number of
 
 Parameters \(N\), \(p\), and \(\lambda\) are unknown and need to be estimated. In a frequentist framework, marginalization is performed by summing over all possible values of \(N\) (\citeproc{ref-Dorazio2005}{Dorazio et al. 2005}). In a Bayesian framework, all these parameters are estimated directly, which simplifies the process (\citeproc{ref-RD2006}{Royle and Dorazio 2006}). Both parameters, \(\lambda\) and \(p\), can be modeled as functions of explanatory spatial and temporal variables, in the spirit of generalized linear models, and Poisson or logistic regressions for example. I warmly recommend chapter 7 in Kéry and Royle (\citeproc{ref-KR2015}{2015}) for a detailed description of the multinomial mixture model.
 
-\section{Simulations}\label{simulations}
+\section{Simulation study}\label{simulation-study}
 
 I conducted a simulation study to evaluate the model's performance by examining parameter bias under varying numbers of sampling sites and sampling occasions. I simulated removal data over 1, 5, 10 and 50 sites using a Poisson distribution with expected number of animals \(\lambda\) between 10 and 100 (20 values) for the ecological process. I simulated the observation process with a capture probability \(p\) varying between 0.3 and 0.9 (20 values) across 3, 5 and 10 occasions per site. In total, I considered 4800 scenarios. I fitted the multinomial N-mixture model to the simulated data within the frequentist framework using function \texttt{multinomPois()} in the \texttt{R} package \texttt{unmarked} (\citeproc{ref-Kellner_2023}{Kellner et al. 2023}), and I repeated this procedure 500 times. Eventually, I calculated the relative bias for each parameter.
 
@@ -227,7 +227,7 @@ Saint-Just    & 85  & 61    & 77 & 9.2 \\
 Valergues     & 0 & 1   & 3 & 9.4 \\
 \hline
 \end{tabular}
-\caption{Number of invasive coypus removed monthly, and averaged 3-month temperature in several cities of the Hérault department for the year 2022.}
+\caption{Number of invasive coypus removed monthly and the average 3-month temperature across several cities in the Hérault department, France, in 2022.}
 \label{tab:coypus}
 \end{table}
 
@@ -241,7 +241,7 @@ Removal data on muskrats in the Netherlands were collected by professional trapp
 
 }
 
-\caption{Data. Top removal data. Bottom temperature. DIFFICILE DE FAIRE LA DIFFERENCE AVEC LES DONNEES NON?}\label{fig:datsmuskrats}
+\caption{Total number of invasive muskrats removed in January, February and March (top panel), and the average 3-month temperature (bottom panel) across the Netherlands in 2014.}\label{fig:datsmuskrats}
 \end{figure}
 
 \subsection{Implementation}\label{implementation}
@@ -258,7 +258,7 @@ The results of the simulation are presented in Figure \ref{fig:bias}. Overall, t
 
 }
 
-\caption{Relative bias.}\label{fig:bias}
+\caption{Relative bias in abundance estimates from a multinomial N-mixture model with constant parameters. Capture probabilities (X-axis) range from 0.3 to 0.9, while abundance (Y-axis) varies between 10 and 100 individuals. Scenarios consider 3, 5, and 10 capture occasions (columns) and 1, 5, 10, and 50 sites (rows). Results are based on 500 simulations.}\label{fig:bias}
 \end{figure}
 
 Increasing the number of sites to 10 significantly reduced this bias, and no bias was observed with 50 sites, supporting the recommendation by (\citeproc{ref-Dorazio2005}{Dorazio et al. 2005}) to analyze data jointly rather than separately. These findings align with previous simulation studies, which also reported minimal bias in removal models (e.g., \citeproc{ref-Womack2019}{Womack-Bulliner et al. 2019}). To enhance reproducibility, I provide the code for the simulation study in the Supplementary Material. This resource can be adapted for various purposes, such as conducting custom simulation studies or designing removal protocols and conducting power analyses.
@@ -271,7 +271,7 @@ In the coypus case study, temperature was found to have a negative effect on abu
 
 }
 
-\caption{Posterior abundance.}\label{fig:pdcoypus}
+\caption{Posterior density plots for coypu abundance across several cities in the Hérault department, France, in 2022. The vertical shaded line indicates the posterior mean abundance, accompanied by its credible interval. See Table 1 for the raw data.}\label{fig:pdcoypus}
 \end{figure}
 
 A key assumption of the multinomial N-mixture model is that abundance follows a Poisson distribution, which assumes the mean and variance are equal. However, this assumption does not appear valid based on the estimated abundance. Fortunately, this limitation can be addressed by relaxing the Poisson assumption. A straightforward approach is to use a negative binomial distribution to account for overdispersion. This adjustment can be implemented in both \texttt{NIMBLE} and \texttt{unmarked} but is not currently supported by \texttt{ubms}. I demonstrate how to fit such a model to the coypus data in the Supplementary Material. Interestingly, under the negative binomial model, the effect of temperature on abundance was no longer significant, with a slope estimate of -0.27 (-1.29, 0.60).
@@ -284,7 +284,7 @@ In the muskrats case study, temperature was found to have a negative effect on a
 
 }
 
-\caption{Muskrats.}\label{fig:muskrats}
+\caption{Posterior mean estimates of muskrat abundance in the Netherlands in 2022 (top panel) and the corresponding coefficient of variation (bottom panel). See Figure 1 for the raw data.}\label{fig:muskrats}
 \end{figure}
 
 An important feature of multinomial N-mixture models is their ability to quantify uncertainty, which is often overlooked in spatial analyses. Here, I provide the coefficient of variation to represent the uncertainty surrounding abundance estimates. This metric can help identify specific areas where increased sampling effort might be beneficial to improve estimate precision.
@@ -301,19 +301,11 @@ In this context, I argue that estimates of abundance alone are of limited utilit
 
 \section{Acknowledgments}\label{acknowledgments}
 
-I would like to warmly thank Nathalie Vazzoler-Antoine and Tanguy Lebrun for sharing the coypus data, and the team LIFE MICA for sharing the muskrats data.
+I would like to warmly thank Nathalie Vazzoler-Antoine and Tanguy Lebrun for sharing the coypus data, and the team LIFE MICA for sharing the muskrats data. This work was funded by a grant from the University of Montpellier through its ExposUM institute.
 
 \subsection{Data availability statement}\label{data-availability-statement}
 
 Data and code are available at \href{https://github.com/oliviergimenez/counting-rodents}{https://github.com/oliviergimenez/counting-rodents}.
-
-\subsection{Funding statement}\label{funding-statement}
-
-This work was funded by a grant from the University of Montpellier through its ExposUM institute.
-
-\subsection{Conflict of interest disclosure}\label{conflict-of-interest-disclosure}
-
-The author has no conflicts of interest to declare.
 
 \section{References}\label{references}
 
