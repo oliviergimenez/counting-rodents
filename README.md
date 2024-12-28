@@ -1,10 +1,10 @@
 # Data, code and manuscript 'Estimating invasive rodent abundance using removal data and hierarchical models'
 
--   [analyses](https://github.com/oliviergimenez/counting-rodents/tree/main/code)
+-   [analyses](https://github.com/oliviergimenez/counting-rodents/tree/main/analyses)
     -   `coypus.Rmd`: R code for running the coypus analyses
     -   `muskrats.Rmd`: R code for running the muskrats analyses
     -   `simulations.Rmd`: R code for running the simulations
-    -   [data](https://github.com/oliviergimenez/counting-rodents/tree/main/analyses/data) with and without spatial autocorrelation
+    -   [data](https://github.com/oliviergimenez/counting-rodents/tree/main/analyses/data)
         -   `coypus.rds`: coypus data
         -   `temperature_netherlands.rds`: temperature data for 2014
         -   `temperature_netherlands_allperiod.rds`: temperature data for 1987-2014
