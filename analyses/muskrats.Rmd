@@ -508,10 +508,10 @@ N_to_map <- netherlands_with_counts %>%
 Build maps:
 ```{r}
 plot_mean <- ggplot() + 
-  geom_sf(data = netherlands, fill = NA) + 
-  geom_sf(data = N_to_map, aes(fill = log(N_mean)), color = "#FFFFFF99") +
+  geom_sf(data = netherlands, fill = "grey90") + 
+  geom_sf(data = N_to_map, aes(fill = (N_mean-removed)), color = "#FFFFFF99") +
   scale_fill_viridis_c(direction = -1, option = "A") + 
-  labs(fill = "# muskrats (log)") +
+  labs(fill = "# muskrats \nremaining") +
   theme(
     legend.title = element_text(hjust = 0.5, vjust = 1),
  #   legend.position = "top",
@@ -532,7 +532,7 @@ plot_mean <- ggplot() +
                                     width = unit(0.8, "cm"))          # Adjust width of the north arrow)
 
 plot_cv <- ggplot() + 
-  geom_sf(data = netherlands, fill = NA) + 
+  geom_sf(data = netherlands, fill = "grey90") + 
   geom_sf(data = N_to_map, aes(fill = N_cv), color = "#FFFFFF99") +
   scale_fill_viridis_c(direction = -1) + 
   labs(fill = "CV (%)") +
