@@ -1,7 +1,7 @@
 ---
-title: "Assessment of abundance estimator properties in removal models"
+title: "Assessment of abundance estimator properties in removal models when the closure assumption is not met"
 author: "Olivier Gimenez"
-date: "Dec 2024, Apr 2025"
+date: "Apr 2025"
 output: 
   html_document:
     toc: TRUE
@@ -27,22 +27,51 @@ theme_set(theme_light())
 
 # Objective
 
-Here I compute the relative bias (in %) in the estimator of expected abundance $E(N) = \lambda$ in a removal model with constant parameters with package `unmarked` (frequentist/mle). Relative bias is $(E(\hat \lambda) - \lambda)/\lambda$. I also report the root mean square error and the coverage of the confidence interval. 
+N-mixture models assume *population closure*; that is, $N$ remains constant over all occasions; there is no mortality, recruitment or movement into and out of the population during the time between the first and last occasions. What if this assumption is not met? 
 
+Here I simulate data from an open-population model to break that closure assumption. Specifically, I generate data where individuals can leave (emigration) and/or arrive between occasions (immigration). We may think of these two terms also as survival and recruitment.
+
+To assess performance, I compute the relative bias (in %) in the estimator of expected abundance $E(N) = \lambda$ in a removal model with constant parameters with package `unmarked` (frequentist/mle). Relative bias is $(E(\hat \lambda) - \lambda)/\lambda$. I also report the root mean square error and the coverage of the confidence interval. 
+ 
 Load packages:
 ```{r}
 library(unmarked)
 library(tidyverse)
 ```
 
-# Function
+# Functions
 
-Create function to carry out simulations:
+Create functions to carry out simulations:
 ```{r}
+# simulate data that break the closure assumption
+sim_open <- function(nb_sites, nb_occasions, lambda, p, stay, arrivals) {
+  # nb_sites: number of sites
+  # nb_occasions: number of occasions
+  # lambda: expected abundance, Poisson rate 
+  # p: capture probability
+  # stay: Pr(individual sticks around between occasions)
+  # arrivals: mean number of new arrivals between occasions
+  y <- matrix(0, nb_sites, nb_occasions)
+  for(i in 1:nb_sites) {
+    avail <- rpois(1, lambda) # population at first sampling occasion
+    for(j in 1:nb_occasions) {
+      y[i, j] <- rbinom(1, avail, p) # detect and remove
+      avail <- avail - y[i, j] # left after removal
+      if(j < nb_occasions) { # between‑occasion dynamics
+        avail <- rbinom(1, avail, stay) +  # survivors who stick around
+          rpois(1, arrivals)               # new arrivals
+      }
+    }
+  }
+  y
+}
+
+# simulate, fit and compute metrics
 removal_par <- function(
-    
-  nb_sites = 10, # number of sites
+  nb_sites = 5, # number of sites
   nb_occasions = 3, # number of occasions
+  stay = 0.80, # Pr(individual sticks around between occasions)
+  arrivals = 1.0, # mean number of new arrivals between occasions
   lambda = 50, # Poisson rate 
   p = 0.5, # capture probability
   n_sim = 10){ # number of simulations
@@ -54,26 +83,15 @@ removal_par <- function(
   
   # simulate data n_sim times
   for (j in 1:n_sim){
-    
-    # define state process
-    N <- rpois(nb_sites, lambda) # abundance
-    
-    # pre-allocate memory for matrix of removal data
-    y <- matrix(NA, nrow = nb_sites, ncol = nb_occasions) # removal counts
-    
-    # get multinomial cells probabilities
-    pi <- rep(NA, nb_occasions)
-    pi[1] <- p
-    tmp <- rep(1 - p, nb_occasions - 1)
-    for (k in 2:nb_occasions){
-      pi[k] <- prod(tmp[1:(k-1)]) * p
-    }
-    
-    # define observation process
-    for(l in 1:nb_sites) {
-      y[l,] <- rmultinom(1, N[l], c(pi, 1 - sum(pi)))[1:length(pi)]
-    }
-    
+
+    # simulate data that break the closure assumption
+    y <- sim_open(nb_sites = nb_sites, 
+                  nb_occasions = nb_occasions, 
+                  lambda = lambda, 
+                  p = p, 
+                  stay = stay, 
+                  arrivals = arrivals)
+      
     # format data
     umf <- unmarkedFrameMPois(y = y, type = "removal")
 
@@ -138,6 +156,8 @@ for (k in nb_sites){
       for (j in abundance){
         res <- removal_par(nb_sites = k,
                            nb_occasions = l,
+                           stay = 0.80,
+                           arrivals = 1.0, 
                            lambda = j,
                            p = i,
                            n_sim = n_sim)
@@ -157,7 +177,7 @@ for (k in nb_sites){
 
 Save results:
 ```{r, eval=FALSE}
-saveRDS(object = sim, file = "sims/sims100.rds")
+saveRDS(object = sim, file = "sims/simsclosure100.rds")
 ```
 
 
@@ -201,7 +221,7 @@ ggplot(sim, aes(x = capture, y = abundance, fill = bias)) +
 
 Save plot:
 ```{r}
-ggsave(filename = "sims/heatmap_bias.png")
+ggsave(filename = "sims/heatmap_bias_closure.png")
 ```
 
 
@@ -243,7 +263,7 @@ ggplot(sim, aes(x = capture, y = abundance, fill = rmse)) +
 
 Save plot:
 ```{r}
-ggsave(filename = "sims/heatmap_rmse.png")
+ggsave(filename = "sims/heatmap_rmse_closure.png")
 ```
 
 
@@ -261,7 +281,7 @@ ggplot(sim, aes(x = capture, y = abundance, fill = cover)) +
   viridis::scale_fill_viridis(
     option = "plasma",  
     direction = 1,     # rouge → jaune → violet (inverse si besoin)
-    limits = c(0.80, 1)
+    limits = c(0, 1)
   ) + 
 #  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = ) +
   facet_wrap(
@@ -290,7 +310,5 @@ ggplot(sim, aes(x = capture, y = abundance, fill = cover)) +
 
 Save plot:
 ```{r}
-ggsave(filename = "sims/heatmap_cover.png")
+ggsave(filename = "sims/heatmap_cover_closure.png")
 ```
-
-
