@@ -1,7 +1,7 @@
 ---
 title: "Estimating coypus abundance"
 author: "Olivier Gimenez"
-date: "Dec 2024"
+date: "Dec 2024, Apr 2025"
 output: 
   html_document:
     toc: TRUE
@@ -179,6 +179,33 @@ code <- nimbleCode({
   for (k in 1:2){
     beta[k] ~ dnorm(0, sd = 1.5)
   }
+  
+  #---------------- check model goodness of fit
+  
+  for(i in 1:K){ 
+    ## replicate data set
+    n.pred[i] ~ dbin(pcap[i], N[i])
+    y.pred[i,1:J] ~ dmulti(pic[i,1:J], n.pred[i])
+    
+    ## Freeman–Tukey residuals: observation component
+    for(k in 1:J){ 
+      e1[i,k]      <- pic[i,k] * n[i] # expected counts (obs)
+      resid1[i,k]  <- pow(sqrt(y[i,k]) - sqrt(e1[i,k]), 2)
+      e1.pred[i,k] <- pic[i,k] * n.pred[i] # expected counts (rep)
+      resid1.pred[i,k] <- pow(sqrt(y.pred[i,k]) - sqrt(e1.pred[i,k]), 2)
+    }  
+    ## Freeman–Tukey residuals: abundance component
+    e2[i] <- pcap[i] * lambda[i] 
+    resid2[i] <- pow(sqrt(n[i]) - sqrt(e2[i]), 2) 
+    resid2.pred[i] <- pow(sqrt(n.pred[i]) - sqrt(e2[i]), 2) 
+  }  
+  
+  # fit statistic
+  fit1.data <- sum(resid1[1:K, 1:J])      # observation part (data)
+  fit1.pred <- sum(resid1.pred[1:K, 1:J]) # observation part (replicates)
+  fit2.data <- sum(resid2[1:K])           # abundance part (data)
+  fit2.pred <- sum(resid2.pred[1:K])      # abundance part (replicates)
+  
 })
 ```
 
@@ -206,7 +233,7 @@ Rmcmc <- compileNimble(Rmodel, showCompilerOutput = F)
 #ModSpec <- configureMCMC(Rmodel) # Nimble picks the samplers
 ModSpec <- configureMCMC(Rmodel, onlySlice = TRUE) # slice sampling 
 ModSpec$resetMonitors()
-ModSpec$addMonitors(c("alpha","N","beta"))
+ModSpec$addMonitors(c("alpha","N","beta","fit1.data","fit1.pred","fit2.data","fit2.pred"))
 Cmcmc <- buildMCMC(ModSpec)
 Cmodel <- compileNimble(Cmcmc, project = Rmodel, resetFunctions = TRUE)
 ```
@@ -310,6 +337,17 @@ Nposterior %>%
 ggsave("hist_coypus.png", width = 10, height = 6)
 ```
 
+Assess model goodness-of-fit. Consider first the observation part of the model:
+```{r}
+mean(res[,'fit1.pred'] > res[,'fit1.data'])
+```
+
+Then the abundance part of the model:
+```{r}
+mean(res[,'fit2.pred'] > res[,'fit2.data'])
+```
+
+
 ## Poisson distribution with `ubms`
 
 Get data ready:
@@ -403,6 +441,33 @@ code <- nimbleCode({
   for (k in 1:2){
     beta[k] ~ dnorm(0, sd = 1.5)
   }
+  
+  #---------------- check model goodness of fit
+  
+  for(i in 1:K){ 
+    ## replicate data set
+    n.pred[i] ~ dbin(pcap[i], N[i])
+    y.pred[i,1:J] ~ dmulti(pic[i,1:J], n.pred[i])
+    
+    ## Freeman–Tukey residuals: observation component
+    for(k in 1:J){ 
+      e1[i,k]      <- pic[i,k] * n[i] # expected counts (obs)
+      resid1[i,k]  <- pow(sqrt(y[i,k]) - sqrt(e1[i,k]), 2)
+      e1.pred[i,k] <- pic[i,k] * n.pred[i] # expected counts (rep)
+      resid1.pred[i,k] <- pow(sqrt(y.pred[i,k]) - sqrt(e1.pred[i,k]), 2)
+    }  
+    ## Freeman–Tukey residuals: abundance component
+    e2[i] <- pcap[i] * lambda[i] 
+    resid2[i] <- pow(sqrt(n[i]) - sqrt(e2[i]), 2) 
+    resid2.pred[i] <- pow(sqrt(n.pred[i]) - sqrt(e2[i]), 2) 
+  }  
+  # fit statistic
+  fit1.data <- sum(resid1[1:K, 1:J])      # observation part (data)
+  fit1.pred <- sum(resid1.pred[1:K, 1:J]) # observation part (replicates)
+
+  fit2.data <- sum(resid2[1:K])           # abundance part (data)
+  fit2.pred <- sum(resid2.pred[1:K])      # abundance part (replicates)
+
 })
 
 pic.init <- array(runif(K*J,0.05,0.15), c(K,J))
@@ -423,7 +488,7 @@ Rmcmc <- compileNimble(Rmodel, showCompilerOutput = F)
 #ModSpec <- configureMCMC(Rmodel) # Nimble picks the samplers
 ModSpec <- configureMCMC(Rmodel, onlySlice = TRUE) # slice sampling 
 ModSpec$resetMonitors()
-ModSpec$addMonitors(c("alpha","N","beta","r"))
+ModSpec$addMonitors(c("alpha","N","beta","r","fit1.data","fit1.pred","fit2.data","fit2.pred"))
 Cmcmc <- buildMCMC(ModSpec)
 Cmodel <- compileNimble(Cmcmc, project = Rmodel, resetFunctions = TRUE)
 
@@ -487,6 +552,15 @@ data.frame(cities = c("candillargues",
                                round(apply(res[,1:6] - matrix(apply(dat[,-c(1,2)],1,sum), nrow = nrow(res[,1:6]), ncol = 6, byrow= T), 2, quantile, probs = c(2.5, 97.5)/100))[2,], ')'))
 ```
 
+Assess model goodness-of-fit. Consider first the observation part of the model:
+```{r}
+mean(res[,'fit1.pred'] > res[,'fit1.data'])
+```
+
+Then the abundance part of the model:
+```{r}
+mean(res[,'fit2.pred'] > res[,'fit2.data'])
+```
 
 # Session info
 

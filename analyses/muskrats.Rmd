@@ -428,6 +428,33 @@ code <- nimbleCode({
   for (k in 1:2){
     beta[k] ~ dnorm(0, sd = 1.5)
   }
+  
+#---------------- check model goodness of fit
+  
+  for(i in 1:K){ 
+    ## replicate data set
+    n.pred[i] ~ dbin(pcap[i], N[i])
+    y.pred[i,1:J] ~ dmulti(pic[i,1:J], n.pred[i])
+    
+    ## Freeman–Tukey residuals: observation component
+    for(k in 1:J){ 
+      e1[i,k]      <- pic[i,k] * n[i] # expected counts (obs)
+      resid1[i,k]  <- pow(sqrt(y[i,k]) - sqrt(e1[i,k]), 2)
+      e1.pred[i,k] <- pic[i,k] * n.pred[i] # expected counts (rep)
+      resid1.pred[i,k] <- pow(sqrt(y.pred[i,k]) - sqrt(e1.pred[i,k]), 2)
+    }  
+    ## Freeman–Tukey residuals: abundance component
+    e2[i] <- pcap[i] * lambda[i] 
+    resid2[i] <- pow(sqrt(n[i]) - sqrt(e2[i]), 2) 
+    resid2.pred[i] <- pow(sqrt(n.pred[i]) - sqrt(e2[i]), 2) 
+  }  
+  # fit statistic
+  fit1.data <- sum(resid1[1:K, 1:J])      # observation part (data)
+  fit1.pred <- sum(resid1.pred[1:K, 1:J]) # observation part (replicates)
+
+  fit2.data <- sum(resid2[1:K])           # abundance part (data)
+  fit2.pred <- sum(resid2.pred[1:K])      # abundance part (replicates)
+  
 })
 ```
 
@@ -454,7 +481,7 @@ Rmcmc <- compileNimble(Rmodel, showCompilerOutput = F)
 #ModSpec <- configureMCMC(Rmodel) # Nimble picks the samplers
 ModSpec <- configureMCMC(Rmodel, onlySlice = TRUE) # slice sampling 
 ModSpec$resetMonitors()
-ModSpec$addMonitors(c("alpha","N","beta","sdeps"))
+ModSpec$addMonitors(c("alpha","N","beta","sdeps","fit1.data","fit1.pred","fit2.data","fit2.pred"))
 Cmcmc <- buildMCMC(ModSpec)
 Cmodel <- compileNimble(Cmcmc, project = Rmodel, resetFunctions = TRUE)
 ```
@@ -484,9 +511,13 @@ Check convergence:
 MCMCtrace(samp, params = c("alpha","beta","sdeps"), pdf = FALSE)
 ```
 
-Build map of estimated number of muskrats remaining after removal. First, compute the estimated number of muskrats:
+Gather MCMC values together:
 ```{r}
 res <- rbind(samp$chain1, samp$chain2)
+```
+
+Build map of estimated number of muskrats remaining after removal. First, compute the estimated number of muskrats:
+```{r}
 mask <- str_detect(colnames(res), "N")
 N_mean <- apply(res[,mask], 2, mean)
 N_sd <- apply(res[,mask], 2, sd)
@@ -504,6 +535,17 @@ N_to_map <- netherlands_with_counts %>%
   slice(1) %>%
   select(-month,-year,-total_n,-statnaam)
 ```
+
+Assess model goodness-of-fit. Consider first the observation part of the model:
+```{r}
+mean(res[,'fit1.pred'] > res[,'fit1.data'])
+```
+
+Then the abundance part of the model:
+```{r}
+mean(res[,'fit2.pred'] > res[,'fit2.data'])
+```
+
 
 Build maps:
 ```{r}
